@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@layer vendor, components;
+
+/* 2. Import React-Toastify inside the low-priority vendor layer */
+@layer vendor {
+  @import "react-toastify/dist/ReactToastify.css";
+}
+
+@layer components {
+  /* Style the active toast layout frame */
+  .Toastify__toast {
+    /* Use the ! suffix on each class to apply native CSS !important specificity */
+    @apply bg-white/80! backdrop-blur-md! border! border-zinc-200/50! shadow-lg! text-zinc-800!;
+    
+    /* Plain CSS properties outside of @apply can still use raw !important */
+    border-radius: 9999px 0px 0px 9999px !important; 
+    padding: 12px 24px 12px 16px !important;
+    margin-bottom: 12px !important;
+  }
+
+  /* Remove default interior padding blocks from React-toastify layout boxes */
+  .Toastify__toast-body {
+    @apply p-0! m-0! flex! items-center! gap-3!;
+  }
+
+  /* Strip default native status icons if you are providing custom circular graphics */
+  .Toastify__toast-icon {
+    @apply hidden!;
+  }
+
+  /* Optional: Force the container wrapper to align perfectly to the right edge boundary */
+  .Toastify__toast-container--bottom-right {
+    right: 0px !important;
+    padding-right: 0px !important;
+    bottom: 24px !important;
+  }
+}
