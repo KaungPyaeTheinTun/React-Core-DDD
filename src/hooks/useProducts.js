@@ -23,8 +23,9 @@ export function useProducts() {
     try {
       setLoading(true);
       const response = await productApi.list();
-      const actualProducts =
-        response?.data || (Array.isArray(response) ? response : []);
+
+      // Drill down to where your actual products array lives inside the ApiResponse wrapper
+      const actualProducts = response?.data?.items || [];
       setProducts(actualProducts);
     } catch (err) {
       setError("Failed to sync products list with server.");

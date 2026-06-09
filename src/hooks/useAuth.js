@@ -38,18 +38,27 @@ export function useAuth() {
           );
           navigate("/login");
         } else {
-          // 2. Handle Login Pipeline
-          const data = await authApi.login({
+          const response = await authApi.login({
             email: formData.email,
             password: formData.password,
           });
 
-          localStorage.setItem("user", JSON.stringify(data.user));
-          if (data.token) {
-            localStorage.setItem("token", data.token);
+          // Remember your backend wraps everything in an ApiResponse structure containing a '.data' field
+          const authData = response.data;
+
+          if (authData && authData.access_token) {
+            localStorage.setItem("token", authData.access_token);
+            localStorage.setItem("refresh_token", authData.refresh_token); // Save this for later!
+            localStorage.setItem("user", JSON.stringify(authData.user));
+
+            showNewCommentToast(
+              "System",
+              `Welcome back, ${authData.user.fullName}!`,
+            );
+            navigate("/users");
+          } else {
+            setError("Authentication payload missing.");
           }
-          showNewCommentToast("System", `Welcome back, ${data.user.fullName}!`);
-          navigate("/users");
         }
       } catch (err) {
         const fallbackMsg = isRegister

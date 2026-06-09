@@ -5,7 +5,7 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-//REQUEST INTERCEPTOR: Automatically attaches the JWT bearer token if it exists
+// REQUEST INTERCEPTOR: Automatically attaches the JWT bearer token if it exists
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -16,21 +16,22 @@ api.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  },
+  }
 );
 
-//RESPONSE INTERCEPTOR: Handle global authorization failures (e.g., token expired)
+// RESPONSE INTERCEPTOR: Handle global authorization failures (e.g., token expired)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       // Clear compromised cache and kick back to login if unauthorized
       localStorage.removeItem("token");
+      localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
       window.location.href = "/login";
     }
     return Promise.reject(error);
-  },
+  }
 );
 
 export const authApi = {
@@ -39,16 +40,29 @@ export const authApi = {
 };
 
 export const userApi = {
-  list: async () => (await api.get("users")).data,
-  create: async (payload) => (await api.post("users", payload)).data,
-  update: async (id, payload) => (await api.put(`users/${id}`, payload)).data,
-  remove: async (id) => (await api.delete(`users/${id}`)).data,
+  list: async (page = 1, pageSize = 10) => 
+    (await api.get(`UsersApi?page=${page}&pageSize=${pageSize}`)).data,
+  
+  create: async (payload) => 
+    (await api.post("UsersApi", payload)).data,
+  
+  update: async (id, payload) => 
+    (await api.put(`UsersApi/${id}`, payload)).data,
+  
+  remove: async (id) => 
+    (await api.delete(`UsersApi/${id}`)).data,
 };
 
 export const productApi = {
-  list: async () => (await api.get("products")).data,
-  create: async (payload) => (await api.post("products", payload)).data,
-  update: async (id, payload) =>
-    (await api.put(`products/${id}`, payload)).data,
-  remove: async (id) => (await api.delete(`products/${id}`)).data,
+  list: async (page = 1, pageSize = 10) => 
+    (await api.get(`ProductApi?page=${page}&pageSize=${pageSize}`)).data,
+  
+  create: async (payload) => 
+    (await api.post("ProductApi", payload)).data,
+  
+  update: async (id, payload) => 
+    (await api.put(`ProductApi/${id}`, payload)).data,
+  
+  remove: async (id) => 
+    (await api.delete(`ProductApi/${id}`)).data,
 };

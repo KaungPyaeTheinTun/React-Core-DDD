@@ -1,17 +1,20 @@
+import { forwardRef } from "react"; // 1. Import forwardRef from React
 import { motion } from "framer-motion";
 import SectionCard from "../SectionCard.jsx";
 import FormInput from "../FormInput.jsx";
 
-export default function EditForm({
+// 2. Wrap your function component inside forwardRef()
+const EditForm = forwardRef(({
   cardVariants,
   productForm,
   setProductForm,
   handleFormSubmit,
   submitLoading,
   resetForm,
-}) {
+}, ref) => { // 3. Add the 'ref' parameter as the second argument here
   return (
     <motion.div
+      ref={ref} // 4. Attach the forwarded ref to your outer motion layout node
       key="edit-product-form"
       variants={cardVariants}
       initial="initial"
@@ -84,4 +87,7 @@ export default function EditForm({
       </SectionCard>
     </motion.div>
   );
-}
+});
+
+// 5. Explicitly export the forwardRef wrapper construct
+export default EditForm;

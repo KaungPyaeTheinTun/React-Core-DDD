@@ -15,12 +15,15 @@ export function useUsers() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [targetUser, setTargetUser] = useState(null);
 
+  // Inside useUsers.js
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await userApi.list();
-      const actualUsers =
-        response?.data || (Array.isArray(response) ? response : []);
+      const response = await userApi.list(); // This returns (await api.get("UsersApi")).data
+
+      // Fix: Drill down to response.data.items where your array actually sits
+      const actualUsers = response?.data?.items || [];
+
       setUsers(actualUsers);
     } catch (err) {
       setError("Failed to load users from server.");
@@ -110,7 +113,10 @@ export function useUsers() {
 
   // Caches the formatted rows so table data doesn't map on random UI state triggers
   const formattedRows = useMemo(() => {
-    return users.map((user) => ({
+    // Ensure users is treated as an array even if it's undefined initially
+    const usersArray = Array.isArray(users) ? users : [];
+
+    return usersArray.map((user) => ({
       id: user.id,
       name: user.fullName || user.name || "",
       email: user.email || "",
