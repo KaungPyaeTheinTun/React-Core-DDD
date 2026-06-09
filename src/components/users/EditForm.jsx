@@ -19,7 +19,19 @@ export default function EditForm({
       exit="exit"
     >
       <SectionCard title="Modify User Profile">
-        <form
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="text-sm font-bold uppercase tracking-widest text-zinc-400">
+            Not available right now.
+          </p>
+          <button
+            type="button"
+            onClick={resetForm} // This triggers the parent hook state change
+            className="mt-6 h-11 px-8 rounded-xl border border-zinc-200 font-bold text-zinc-600 hover:bg-zinc-50 uppercase text-xs tracking-wider transition"
+          >
+            Close
+          </button>
+        </div>
+        {/* <form
           onSubmit={handleEditSubmit}
           className="flex flex-col sm:flex-row gap-3 items-end"
         >
@@ -29,9 +41,12 @@ export default function EditForm({
             </label>
             <FormInput
               placeholder="John Doe"
-              value={userForm.name}
+              value={userForm?.fullName ?? ""}
               onChange={(e) =>
-                setUserForm({ ...userForm, name: e.target.value })
+                setUserForm({
+                  ...userForm,
+                  fullName: e.target.value,
+                })
               }
               required
             />
@@ -66,7 +81,7 @@ export default function EditForm({
               {submitLoading ? "Updating..." : "Update"}
             </button>
           </div>
-        </form>
+        </form> */}
       </SectionCard>
     </motion.div>
   );

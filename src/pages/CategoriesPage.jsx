@@ -3,9 +3,9 @@ import { useCallback } from "react";
 import SectionCard from "../components/SectionCard.jsx";
 import DataTable from "../components/DataTable.jsx";
 import DeleteModal from "../components/DeleteModal.jsx";
-import CreateForm from "../components/products/CreateForm.jsx";
-import EditForm from "../components/products/EditForm.jsx";
-import { useProducts } from "../hooks/useProducts.js";
+import CreateForm from "../components/categories/CreateForm.jsx";
+import EditForm from "../components/categories/EditForm.jsx";
+import { useCategories } from "../hooks/useCategories.js";
 import { PackagePlus, Trash2, Edit3, X } from "lucide-react";
 
 const pageVariants = {
@@ -17,27 +17,27 @@ const cardVariants = {
   animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },},
   exit: { opacity: 0, y: -12, scale: 0.99, transition: { duration: 0.2 },},
 };
-export default function ProductsPage() {
+export default function CategoriesPage() {
   const {
     loading,
     error,
     showForm,
     setShowForm,
     editingId,
-    productForm,
-    setProductForm,
+    categoryForm,
+    setCategoryForm,
     submitLoading,
     deleteModalOpen,
     setDeleteModalOpen,
-    targetProduct,
+    targetCategory,
     formattedRows,
     handleFormSubmit,
     handleEditClick,
     openDeleteConfirmation,
     handleConfirmDelete,
     resetForm,
-  } = useProducts();
-  const columns = ["Product Name","Base Price","Tax (10%)","Total (Inc. Tax)","Description","Status",];
+  } = useCategories();
+  const columns = ["Product Name", "Price", "Description"];
   const renderTableActions = useCallback(
     (row) => (
       <div className="flex w-full items-center justify-end gap-1">
@@ -86,10 +86,11 @@ export default function ProductsPage() {
         {showForm && !editingId && (
           <CreateForm
             cardVariants={cardVariants}
-            productForm={productForm}
-            setProductForm={setProductForm}
+            categoryForm={categoryForm}
+            setCategoryForm={setCategoryForm}
             handleFormSubmit={handleFormSubmit}
             submitLoading={submitLoading}
+            resetForm={resetForm}
           />
         )}
 
@@ -97,8 +98,8 @@ export default function ProductsPage() {
         {editingId && (
           <EditForm
             cardVariants={cardVariants}
-            productForm={productForm}
-            setProductForm={setProductForm}
+            categoryForm={categoryForm}
+            setCategoryForm={setCategoryForm}
             handleFormSubmit={handleFormSubmit}
             submitLoading={submitLoading}
             resetForm={resetForm}
@@ -137,7 +138,7 @@ export default function ProductsPage() {
             isOpen={deleteModalOpen}
             onClose={() => setDeleteModalOpen(false)}
             onConfirm={handleConfirmDelete}
-            itemName={targetProduct?.name || ""}
+            itemName={targetCategory?.name || ""}
             title="Remove Product From Inventory"
           />
         )}

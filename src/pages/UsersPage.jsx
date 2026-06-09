@@ -19,25 +19,31 @@ const cardVariants = {
 };
 
 export default function UsersPage() {
-  const {
-    loading,
-    error,
-    showForm,
-    userForm,
-    setUserForm,
-    submitLoading,
-    deleteModalOpen,
-    setDeleteModalOpen,
-    targetUser,
-    formattedRows,
-    handleEditSubmit,
-    handleEditClick,
-    openDeleteConfirmation,
-    handleConfirmDelete,
-    resetForm,
-  } = useUsers();
+const {
+  loading,
+  error,
+  showForm,
 
-  const columns = ["Name", "Email"];
+  formData,
+  setFormData,
+
+  submitLoading,
+
+  deleteModalOpen,
+  setDeleteModalOpen,
+
+  targetItem,
+
+  formattedRows,
+
+  handleSubmit,
+  handleEditClick,
+  openDeleteConfirmation,
+  handleConfirmDelete,
+
+  resetForm,
+} = useUsers();
+  const columns = ["Name", "Email", "Status"];
 
   const renderTableActions = useCallback(
     (row) => (
@@ -71,12 +77,11 @@ export default function UsersPage() {
       <AnimatePresence mode="popLayout">
         {showForm && (
           <EditForm
-            cardVariants={cardVariants}
-            userForm={userForm}
-            setUserForm={setUserForm}
-            handleEditSubmit={handleEditSubmit}
-            submitLoading={submitLoading}
+            userForm={formData}
+            setUserForm={setFormData}
+            handleEditSubmit={handleSubmit}
             resetForm={resetForm}
+            cardVariants={cardVariants}
           />
         )}
       </AnimatePresence>

@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { authApi } from "../services/api.js";
+import { authApi } from "../api/authApi";
 import { showNewCommentToast } from "../utils/toast.jsx";
 
 export function useAuth() {
@@ -44,17 +44,18 @@ export function useAuth() {
           });
 
           // Remember your backend wraps everything in an ApiResponse structure containing a '.data' field
-          const authData = response.data;
+          const authData = response.data.data;
 
-          if (authData && authData.access_token) {
+          if (authData?.access_token) {
             localStorage.setItem("token", authData.access_token);
-            localStorage.setItem("refresh_token", authData.refresh_token); // Save this for later!
+            localStorage.setItem("refresh_token", authData.refresh_token);
             localStorage.setItem("user", JSON.stringify(authData.user));
 
             showNewCommentToast(
               "System",
               `Welcome back, ${authData.user.fullName}!`,
             );
+
             navigate("/users");
           } else {
             setError("Authentication payload missing.");
