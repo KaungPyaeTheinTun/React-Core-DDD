@@ -70,7 +70,7 @@ export default function CategoriesPage() {
       ) : (
         <PackagePlus className="h-3.5 w-3.5" />
       )}
-      {showForm || editingId ? "Cancel" : "Add Product"}
+      {showForm || editingId ? "Cancel" : "Add Category"}
     </button>
   );
 
@@ -109,10 +109,10 @@ export default function CategoriesPage() {
 
       {/* 3. MAIN DATA TABLE REGION */}
       <motion.div variants={cardVariants}>
-        <SectionCard title="Products Catalog" action={headerAction}>
+        <SectionCard title="Categories" action={headerAction}>
           {loading ? (
             <div className="py-12 text-center text-zinc-400 text-xs font-medium uppercase tracking-wider animate-pulse">
-              Synchronizing live catalog data...
+              Synchronizing live category data...
             </div>
           ) : error ? (
             <div className="py-12 text-center text-black text-xs font-medium uppercase tracking-wider border border-zinc-200 rounded-xl bg-zinc-50">

@@ -1,7 +1,4 @@
-// src/services/baseApi.js
-
 import { api } from "../services/api";
-
 export class BaseApi {
   constructor(endpoint) {
     this.endpoint = endpoint;

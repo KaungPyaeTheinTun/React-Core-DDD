@@ -1,6 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import { LogOut, ChevronDown, Users, Package, Menu, X } from "lucide-react";
+import {
+  FileCode2,
+  LogOut,
+  ChevronDown,
+  Users,
+  Package,
+  Menu,
+  X,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Header({ currentUser, onLogout }) {
@@ -82,6 +90,9 @@ export default function Header({ currentUser, onLogout }) {
           <NavLink to="/categories" className={getNavClass}>
             <Package className="h-4 w-4" /> Categories
           </NavLink>
+          <NavLink to="/module-generator" className={getNavClass}>
+            <FileCode2 className="h-4 w-4" /> Generator
+          </NavLink>
         </nav>
 
         <span className="block md:hidden text-xs font-bold uppercase tracking-wider text-black">
@@ -161,6 +172,13 @@ export default function Header({ currentUser, onLogout }) {
               className={getMobileNavClass}
             >
               <Package className="h-4 w-4" /> Categories
+            </NavLink>
+            <NavLink
+              to="/module-generator"
+              onClick={() => setMobileMenuOpen(false)}
+              className={getMobileNavClass}
+            >
+              <FileCode2 className="h-4 w-4" /> Generator
             </NavLink>
           </motion.div>
         )}

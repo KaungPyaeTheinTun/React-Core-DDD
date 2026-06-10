@@ -11,6 +11,7 @@ const LoginPage = lazy(() => import("../pages/LoginPage.jsx"));
 const RegisterPage = lazy(() => import("../pages/RegisterPage.jsx"));
 const UsersPage = lazy(() => import("../pages/UsersPage.jsx"));
 const CategoryPage = lazy(() => import("../pages/CategoriesPage.jsx"));
+const ModuleGeneratorPage = lazy(() => import("../pages/ModuleGeneratorPage.jsx"));
 
 function NotFoundPage() {
   return (
@@ -45,6 +46,7 @@ export default function App() {
           <Route element={<AdminLayout />}>
             <Route path="/users" element={<UsersPage />} />
             <Route path="/categories" element={<CategoryPage />} />
+            <Route path="/module-generator" element={<ModuleGeneratorPage />} />
           </Route>
         </Route>
 

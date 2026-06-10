@@ -1,27 +1,31 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../api/authApi";
 import { showNewCommentToast } from "../utils/toast.jsx";
 
 export function useAuth() {
   const navigate = useNavigate();
-  const [error, setError] = useState("");
+  const errorRef = useRef("");
+  const [error, setErrorState] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Consolidated state matching both login and register fields
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
   });
 
-  // Reusable change utility memoized to prevent input re-renders
+  // Sync both ref and state so the value persists across re-renders
+  const setError = useCallback((msg) => {
+    errorRef.current = msg;
+    setErrorState(msg);
+  }, []);
+
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   }, []);
 
-  // Shared submit gateway handler logic
   const handleAuthSubmit = useCallback(
     async (e, isRegister = false) => {
       e.preventDefault();
@@ -30,7 +34,6 @@ export function useAuth() {
 
       try {
         if (isRegister) {
-          // 1. Handle Registration Pipeline
           await authApi.register(formData);
           showNewCommentToast(
             "Account",
@@ -43,7 +46,6 @@ export function useAuth() {
             password: formData.password,
           });
 
-          // Remember your backend wraps everything in an ApiResponse structure containing a '.data' field
           const authData = response.data.data;
 
           if (authData?.access_token) {
@@ -62,15 +64,22 @@ export function useAuth() {
           }
         }
       } catch (err) {
+        console.log("STATUS:", err.response?.status);
+        console.log("DATA:", err.response?.data);
+        console.log("FULL ERROR:", err);
+
         const fallbackMsg = isRegister
           ? "Registration failed. Try again."
           : "Invalid email or password";
+
         setError(err.response?.data?.message || fallbackMsg);
       } finally {
         setLoading(false);
+        // Restore error from ref in case the re-render wiped the state
+        setErrorState(errorRef.current);
       }
     },
-    [formData, navigate],
+    [formData, navigate, setError],
   );
 
   return {
