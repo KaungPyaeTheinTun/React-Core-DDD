@@ -1,12 +1,9 @@
 import { ImagePlus, Trash2, UploadCloud, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-function normalizeValue(value, multiple) {
+function normalizeValue(value) {
   if (!value) return [];
-
-  const items = Array.isArray(value) ? value : [value];
-
-  return multiple ? items.filter(Boolean) : items.filter(Boolean).slice(0, 1);
+  return Array.isArray(value) ? value.filter(Boolean) : [value].filter(Boolean);
 }
 
 function getPreviewName(item, index) {
@@ -18,7 +15,6 @@ function getPreviewName(item, index) {
 export default function ImageUpload({
   value,
   onChange,
-  multiple = false,
   label = "Image",
   name,
   accept = "image/*",
@@ -28,22 +24,16 @@ export default function ImageUpload({
   className = "",
 }) {
   const inputRef = useRef(null);
-  const selectedImages = useMemo(
-    () => normalizeValue(value, multiple),
-    [value, multiple],
-  );
+  const selectedImages = useMemo(() => normalizeValue(value), [value]);
   const [previews, setPreviews] = useState([]);
 
   useEffect(() => {
     const objectUrls = [];
-
     const nextPreviews = selectedImages.map((item, index) => {
       const url = item instanceof File ? URL.createObjectURL(item) : item;
-
       if (item instanceof File) {
         objectUrls.push(url);
       }
-
       return {
         id:
           item instanceof File
@@ -53,40 +43,34 @@ export default function ImageUpload({
         url,
       };
     });
-
     setPreviews(nextPreviews);
-
     return () => {
       objectUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [selectedImages]);
 
   const emitChange = (items) => {
-    onChange?.(multiple ? items : items[0] || null);
+    onChange?.(items);
   };
 
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files || []);
-
     if (files.length === 0) return;
-
-    const nextImages = multiple ? [...selectedImages, ...files] : [files[0]];
+    const nextImages = [...selectedImages, ...files];
     const limitedImages = maxFiles ? nextImages.slice(0, maxFiles) : nextImages;
-
     emitChange(limitedImages);
     event.target.value = "";
   };
 
   const removeImage = (index) => {
-    emitChange(selectedImages.filter((_, itemIndex) => itemIndex !== index));
+    emitChange(selectedImages.filter((_, i) => i !== index));
   };
 
   const clearImages = () => {
     emitChange([]);
   };
 
-  const canAddMore =
-    !disabled && (!multiple || !maxFiles || selectedImages.length < maxFiles);
+  const canAddMore = !disabled && (!maxFiles || selectedImages.length < maxFiles);
 
   return (
     <div className={`space-y-2 ${className}`}>
@@ -104,7 +88,7 @@ export default function ImageUpload({
             className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-bold uppercase tracking-wider text-zinc-500 transition hover:bg-zinc-100 hover:text-black disabled:cursor-not-allowed disabled:text-zinc-300"
           >
             <X className="h-3.5 w-3.5" />
-            Discard {multiple ? "All" : "Image"}
+            Discard {maxFiles === 1 ? "Image" : "All"}
           </button>
         ) : null}
       </div>
@@ -114,7 +98,7 @@ export default function ImageUpload({
         type="file"
         name={name}
         accept={accept}
-        multiple={multiple}
+        multiple={maxFiles !== 1}
         required={required && selectedImages.length === 0}
         disabled={disabled}
         onChange={handleFileChange}
@@ -125,57 +109,50 @@ export default function ImageUpload({
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={!canAddMore}
-        className="flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-5 text-center transition hover:border-black hover:bg-white disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-50"
+        className="flex items-center gap-3 w-full rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-3 text-left transition hover:border-black hover:bg-white disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-50"
       >
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-black shadow-sm">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-black shadow-sm">
           {selectedImages.length > 0 ? (
-            <ImagePlus className="h-5 w-5" />
+            <ImagePlus className="h-4 w-4" />
           ) : (
-            <UploadCloud className="h-5 w-5" />
+            <UploadCloud className="h-4 w-4" />
           )}
         </span>
         <span className="text-sm font-bold text-black">
-          {multiple ? "Select images" : "Select image"}
+          {selectedImages.length > 0 ? "Add more" : "Select image"}
         </span>
-        <span className="text-xs font-medium text-zinc-500">
-          {multiple
-            ? maxFiles
-              ? `${selectedImages.length}/${maxFiles} selected`
-              : `${selectedImages.length} selected`
+        <span className="ml-auto text-xs font-medium text-zinc-500">
+          {maxFiles
+            ? `${selectedImages.length}/${maxFiles}`
             : selectedImages.length
-              ? "1 selected"
+              ? `${selectedImages.length} selected`
               : "No image selected"}
         </span>
       </button>
 
       {previews.length > 0 ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-wrap gap-3">
           {previews.map((preview, index) => (
             <div
               key={preview.id}
-              className="group overflow-hidden rounded-xl border border-zinc-200 bg-white"
+              className="group relative w-24 overflow-hidden rounded-lg border border-zinc-200 bg-white"
             >
-              <div className="aspect-video overflow-hidden bg-zinc-100">
+              <div className="aspect-square overflow-hidden bg-zinc-100">
                 <img
                   src={preview.url}
                   alt={preview.name}
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className="flex items-center justify-between gap-2 px-3 py-2">
-                <span className="min-w-0 truncate text-xs font-bold text-zinc-600">
-                  {preview.name}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => removeImage(index)}
-                  disabled={disabled}
-                  className="shrink-0 rounded-lg p-1.5 text-zinc-500 transition hover:bg-zinc-100 hover:text-black disabled:cursor-not-allowed disabled:text-zinc-300"
-                  title="Discard Image"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => removeImage(index)}
+                disabled={disabled}
+                className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition hover:bg-black group-hover:opacity-100 disabled:cursor-not-allowed"
+                title="Discard Image"
+              >
+                <X className="h-3 w-3" />
+              </button>
             </div>
           ))}
         </div>

@@ -15,6 +15,7 @@ const NotFoundPage = lazy(() => import("../pages/NotFoundPage.jsx"));
 const UnauthorizedPage = lazy(() => import("../pages/UnauthorizedPage.jsx"));
 
 const UsersPage = lazy(() => import("../pages/admin/UsersPage.jsx"));
+const UserRolesPage = lazy(() => import("../pages/admin/UserRolesPage.jsx"));
 const CategoriesPage = lazy(() => import("../pages/admin/CategoriesPage.jsx"));
 const RolesPage = lazy(() => import("../pages/admin/RolesPage.jsx"));
 const RolesPermissionsPage = lazy(() => import("../pages/admin/RolesPermissionsPage.jsx"));
@@ -40,6 +41,7 @@ export default function App() {
           <Route element={<AdminRoute />}>
             <Route element={<AdminLayout />}>
               <Route path="/admin/users" element={<UsersPage />} />
+              <Route path="/admin/users/:id/roles" element={<UserRolesPage />} />
               <Route path="/admin/categories" element={<CategoriesPage />} />
               <Route path="/admin/roles" element={<RolesPage />} />
               <Route path="/admin/roles/:id/permissions" element={<RolesPermissionsPage />} />

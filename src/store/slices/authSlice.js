@@ -2,6 +2,20 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { authApi } from "../../api/authApi";
 import { extractRolesFromToken } from "../../utils/auth";
 
+function getAuthErrorMessage(err, fallback) {
+  const data = err.response?.data;
+
+  if (typeof data === "string") return data;
+  if (data?.message) return data.message;
+  if (data?.title) return data.title;
+
+  if (data?.errors) {
+    return Object.values(data.errors).flat().join(" ");
+  }
+
+  return err.message || fallback;
+}
+
 export const loginThunk = createAsyncThunk(
   "auth/login",
   async (credentials, { rejectWithValue }) => {
@@ -23,7 +37,7 @@ export const loginThunk = createAsyncThunk(
       };
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || "Invalid email or password",
+        getAuthErrorMessage(err, "Invalid email or password"),
       );
     }
   },
@@ -37,7 +51,7 @@ export const registerThunk = createAsyncThunk(
       return;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || "Registration failed. Try again.",
+        getAuthErrorMessage(err, "Registration failed. Try again."),
       );
     }
   },

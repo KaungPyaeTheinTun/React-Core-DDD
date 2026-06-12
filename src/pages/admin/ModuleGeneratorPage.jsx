@@ -40,7 +40,10 @@ const createField = () => ({
   name: "",
   type: "string",
   length: "",
+  isRequired: false,
   isNullable: false,
+  min: "",
+  max: "",
 });
 
 const toggleClass =
@@ -92,16 +95,52 @@ export default function ModuleGeneratorPage() {
 
     const cleanModuleName = moduleName.trim();
     const cleanFields = fields
-      .map((field) => ({
-        name: field.name.trim(),
-        type: field.type,
-        length:
-          field.length === "" || field.length === null
-            ? null
-            : Number(field.length),
-        isNullable: field.isNullable,
-      }))
-      .filter((field) => field.name);
+      .map((field) => {
+        const trimmed = field.name.trim();
+        if (!trimmed) return null;
+
+        const base = {
+          name: trimmed,
+          type: field.type,
+          length:
+            field.length === "" || field.length === null
+              ? null
+              : Number(field.length),
+          isRequired: field.isRequired,
+          isNullable: field.isNullable,
+        };
+
+        if (field.type === "string") {
+          return {
+            ...base,
+            minLength:
+              field.min === "" || field.min === null
+                ? null
+                : Number(field.min),
+            maxLength:
+              field.max === "" || field.max === null
+                ? null
+                : Number(field.max),
+          };
+        }
+
+        if (field.type === "int" || field.type === "decimal") {
+          return {
+            ...base,
+            minValue:
+              field.min === "" || field.min === null
+                ? null
+                : Number(field.min),
+            maxValue:
+              field.max === "" || field.max === null
+                ? null
+                : Number(field.max),
+          };
+        }
+
+        return base;
+      })
+      .filter(Boolean);
 
     if (!cleanModuleName) {
       toast.error("Module name is required.");
@@ -159,7 +198,6 @@ export default function ModuleGeneratorPage() {
           }
         >
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Module Name + Options row */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
               <div className="flex-1 space-y-1.5">
                 <label
@@ -186,10 +224,9 @@ export default function ModuleGeneratorPage() {
                     disabled={submitting}
                     className="hidden"
                   />
-                  <DatabaseZap className="h-3.5 w-3.5" />
+                  <DatabaseZap className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   Migration
                 </label>
-
                 <label className={toggleClass}>
                   <input
                     type="checkbox"
@@ -198,10 +235,9 @@ export default function ModuleGeneratorPage() {
                     disabled={submitting}
                     className="hidden"
                   />
-                  <Check className="h-3.5 w-3.5" />
+                  <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   DB Update
                 </label>
-
                 <label className={toggleClass}>
                   <input
                     type="checkbox"
@@ -210,7 +246,7 @@ export default function ModuleGeneratorPage() {
                     disabled={submitting}
                     className="hidden"
                   />
-                  <Image className="h-3.5 w-3.5" />
+                  <Image className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   Image
                 </label>
               </div>
@@ -246,116 +282,364 @@ export default function ModuleGeneratorPage() {
                   </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[640px] text-left">
-                    <thead>
-                      <tr className="border-b border-zinc-200 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
-                        <th className="w-[30%] px-4 py-3">Name</th>
-                        <th className="w-[20%] px-4 py-3">Type</th>
-                        <th className="w-[15%] px-4 py-3">Length</th>
-                        <th className="w-[20%] px-4 py-3">Nullable</th>
-                        <th className="w-[15%] px-4 py-3 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {fields.map((field, index) => (
-                        <tr
-                          key={field.id}
-                          className="border-b border-zinc-100 last:border-0 transition hover:bg-zinc-50/50"
-                        >
-                          <td className="px-4 py-2.5">
-                            <FormInput
-                              value={field.name}
-                              onChange={(event) =>
-                                updateField(field.id, {
-                                  name: event.target.value,
-                                })
-                              }
-                              placeholder={`field_${index + 1}`}
-                              disabled={submitting}
-                              className="py-2 text-sm"
-                            />
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <select
-                              value={field.type}
-                              onChange={(event) =>
-                                updateField(field.id, {
-                                  type: event.target.value,
-                                })
-                              }
-                              disabled={submitting}
-                              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-black outline-none transition focus:border-black disabled:bg-zinc-50"
+                <>
+                  {/* Desktop table */}
+                  <div className="hidden sm:block overflow-x-auto">
+                    <table className="w-full min-w-[820px] text-left">
+                      <thead>
+                        <tr className="bg-zinc-50 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+                          <th className="px-4 py-3 w-[180px]">Name</th>
+                          <th className="px-4 py-3 w-[150px]">Type</th>
+                          <th className="px-4 py-3 w-[110px]">Size</th>
+                          <th className="px-4 py-3 text-center w-[60px]">Req</th>
+                          <th className="px-4 py-3 text-center w-[60px]">Null</th>
+                          <th className="px-4 py-3 w-[125px]">Min</th>
+                          <th className="px-4 py-3 w-[125px]">Max</th>
+                          <th className="px-4 py-3 text-right w-12"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {fields.map((field, index) => {
+                          const supportsRange =
+                            field.type === "string" ||
+                            field.type === "int" ||
+                            field.type === "decimal";
+                          const isNumeric =
+                            field.type === "int" || field.type === "decimal";
+
+                          return (
+                            <tr
+                              key={field.id}
+                              className="border-t border-zinc-100 transition hover:bg-zinc-50/60"
                             >
-                              {fieldTypes.map((type) => (
-                                <option key={type} value={type}>
-                                  {type}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <FormInput
-                              type="number"
-                              min="1"
-                              value={field.length}
-                              onChange={(event) =>
-                                updateField(field.id, {
-                                  length: event.target.value,
-                                })
-                              }
-                              placeholder="255"
-                              disabled={submitting}
-                              className="py-2 text-sm"
-                            />
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <label className="inline-flex cursor-pointer items-center gap-2">
-                              <div
-                                className={`relative h-5 w-9 rounded-full transition-colors ${
-                                  field.isNullable ? "bg-black" : "bg-zinc-200"
-                                }`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={field.isNullable}
+                              <td className="px-4 py-2.5">
+                                <FormInput
+                                  value={field.name}
                                   onChange={(event) =>
                                     updateField(field.id, {
-                                      isNullable: event.target.checked,
+                                      name: event.target.value,
                                     })
                                   }
+                                  placeholder={`field_${index + 1}`}
                                   disabled={submitting}
-                                  className="peer sr-only"
+                                  className="py-2 text-sm"
                                 />
-                                <div
-                                  className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                                    field.isNullable
-                                      ? "translate-x-4"
-                                      : "translate-x-0"
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <select
+                                  value={field.type}
+                                  onChange={(event) => {
+                                    const newType = event.target.value;
+                                    const patch = { type: newType };
+                                    if (newType === "bool" || newType === "DateTime") {
+                                      patch.min = "";
+                                      patch.max = "";
+                                    }
+                                    updateField(field.id, patch);
+                                  }}
+                                  disabled={submitting}
+                                  className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-black outline-none transition focus:border-black disabled:bg-zinc-50"
+                                >
+                                  {fieldTypes.map((type) => (
+                                    <option key={type} value={type}>
+                                      {type}
+                                    </option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <FormInput
+                                  type="number"
+                                  min="1"
+                                  value={field.length}
+                                  onChange={(event) =>
+                                    updateField(field.id, {
+                                      length: event.target.value,
+                                    })
+                                  }
+                                  placeholder="255"
+                                  disabled={submitting}
+                                  className="py-2 text-sm"
+                                />
+                              </td>
+                              <td className="px-4 py-2.5 text-center">
+                                <label className="inline-flex cursor-pointer items-center">
+                                  <div
+                                    className={`relative h-5 w-9 rounded-full transition-colors ${
+                                      field.isRequired
+                                        ? "bg-black"
+                                        : "bg-zinc-200"
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={field.isRequired}
+                                      onChange={(event) =>
+                                        updateField(field.id, {
+                                          isRequired: event.target.checked,
+                                        })
+                                      }
+                                      disabled={submitting}
+                                      className="peer sr-only"
+                                    />
+                                    <div
+                                      className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                                        field.isRequired
+                                          ? "translate-x-4"
+                                          : "translate-x-0"
+                                      }`}
+                                    />
+                                  </div>
+                                </label>
+                              </td>
+                              <td className="px-4 py-2.5 text-center">
+                                <label className="inline-flex cursor-pointer items-center">
+                                  <div
+                                    className={`relative h-5 w-9 rounded-full transition-colors ${
+                                      field.isNullable
+                                        ? "bg-black"
+                                        : "bg-zinc-200"
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={field.isNullable}
+                                      onChange={(event) =>
+                                        updateField(field.id, {
+                                          isNullable: event.target.checked,
+                                        })
+                                      }
+                                      disabled={submitting}
+                                      className="peer sr-only"
+                                    />
+                                    <div
+                                      className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                                        field.isNullable
+                                          ? "translate-x-4"
+                                          : "translate-x-0"
+                                      }`}
+                                    />
+                                  </div>
+                                </label>
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <FormInput
+                                  type="number"
+                                  step={isNumeric ? "0.01" : "1"}
+                                  value={field.min}
+                                  onChange={(event) =>
+                                    updateField(field.id, {
+                                      min: event.target.value,
+                                    })
+                                  }
+                                  placeholder={field.type === "string" ? "1" : "0"}
+                                  disabled={submitting || !supportsRange}
+                                  className={`py-2 text-sm ${
+                                    !supportsRange ? "opacity-30" : ""
                                   }`}
                                 />
-                              </div>
-                              <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
-                                {field.isNullable ? "Yes" : "No"}
-                              </span>
-                            </label>
-                          </td>
-                          <td className="px-4 py-2.5 text-right">
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <FormInput
+                                  type="number"
+                                  step={isNumeric ? "0.01" : "1"}
+                                  value={field.max}
+                                  onChange={(event) =>
+                                    updateField(field.id, {
+                                      max: event.target.value,
+                                    })
+                                  }
+                                  placeholder={field.type === "string" ? "100" : "999"}
+                                  disabled={submitting || !supportsRange}
+                                  className={`py-2 text-sm ${
+                                    !supportsRange ? "opacity-30" : ""
+                                  }`}
+                                />
+                              </td>
+                              <td className="px-4 py-2.5 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => removeField(field.id)}
+                                  disabled={submitting}
+                                  className="inline-flex rounded-lg p-1.5 text-zinc-300 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-not-allowed"
+                                  title="Remove Field"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile cards */}
+                  <div className="sm:hidden space-y-2 p-3">
+                    {fields.map((field, index) => {
+                      const supportsRange =
+                        field.type === "string" ||
+                        field.type === "int" ||
+                        field.type === "decimal";
+                      const isNumeric =
+                        field.type === "int" || field.type === "decimal";
+
+                      return (
+                        <div
+                          key={field.id}
+                          className="rounded-xl border border-zinc-200 bg-white overflow-hidden"
+                        >
+                          <div className="flex items-center justify-between px-3.5 py-2.5 bg-zinc-50 border-b border-zinc-100">
+                            <span className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                              #{index + 1}
+                            </span>
                             <button
                               type="button"
                               onClick={() => removeField(field.id)}
                               disabled={submitting}
-                              className="inline-flex rounded-lg p-2 text-zinc-400 transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:text-zinc-300"
-                              title="Remove Field"
+                              className="rounded-lg p-1 text-zinc-300 transition hover:bg-red-50 hover:text-red-500"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                          </div>
+
+                          <div className="p-3.5 space-y-3">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Name</label>
+                              <FormInput
+                                value={field.name}
+                                onChange={(event) =>
+                                  updateField(field.id, { name: event.target.value })
+                                }
+                                placeholder={`field_${index + 1}`}
+                                disabled={submitting}
+                                className="py-1.5 text-xs"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Type</label>
+                                <select
+                                  value={field.type}
+                                  onChange={(event) => {
+                                    const newType = event.target.value;
+                                    const patch = { type: newType };
+                                    if (newType === "bool" || newType === "DateTime") {
+                                      patch.min = "";
+                                      patch.max = "";
+                                    }
+                                    updateField(field.id, patch);
+                                  }}
+                                  disabled={submitting}
+                                  className="w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-black outline-none transition focus:border-black"
+                                >
+                                  {fieldTypes.map((type) => (
+                                    <option key={type} value={type}>{type}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Size</label>
+                                <FormInput
+                                  type="number"
+                                  min="1"
+                                  value={field.length}
+                                  onChange={(event) =>
+                                    updateField(field.id, { length: event.target.value })
+                                  }
+                                  placeholder="255"
+                                  disabled={submitting}
+                                  className="py-1.5 text-xs"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-6">
+                              <label className="flex items-center gap-2.5 cursor-pointer">
+                                <div
+                                  className={`relative h-5 w-9 rounded-full transition-colors ${
+                                    field.isRequired ? "bg-black" : "bg-zinc-200"
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={field.isRequired}
+                                    onChange={(event) =>
+                                      updateField(field.id, { isRequired: event.target.checked })
+                                    }
+                                    disabled={submitting}
+                                    className="peer sr-only"
+                                  />
+                                  <div
+                                    className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                                      field.isRequired ? "translate-x-4" : "translate-x-0"
+                                    }`}
+                                  />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Required</span>
+                              </label>
+                              <label className="flex items-center gap-2.5 cursor-pointer">
+                                <div
+                                  className={`relative h-5 w-9 rounded-full transition-colors ${
+                                    field.isNullable ? "bg-black" : "bg-zinc-200"
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={field.isNullable}
+                                    onChange={(event) =>
+                                      updateField(field.id, { isNullable: event.target.checked })
+                                    }
+                                    disabled={submitting}
+                                    className="peer sr-only"
+                                  />
+                                  <div
+                                    className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                                      field.isNullable ? "translate-x-4" : "translate-x-0"
+                                    }`}
+                                  />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Nullable</span>
+                              </label>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Min</label>
+                                <FormInput
+                                  type="number"
+                                  step={isNumeric ? "0.01" : "1"}
+                                  value={field.min}
+                                  onChange={(event) =>
+                                    updateField(field.id, { min: event.target.value })
+                                  }
+                                  placeholder={field.type === "string" ? "1" : "0"}
+                                  disabled={submitting || !supportsRange}
+                                  className={`py-1.5 text-xs ${!supportsRange ? "opacity-30" : ""}`}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Max</label>
+                                <FormInput
+                                  type="number"
+                                  step={isNumeric ? "0.01" : "1"}
+                                  value={field.max}
+                                  onChange={(event) =>
+                                    updateField(field.id, { max: event.target.value })
+                                  }
+                                  placeholder={field.type === "string" ? "100" : "999"}
+                                  disabled={submitting || !supportsRange}
+                                  className={`py-1.5 text-xs ${!supportsRange ? "opacity-30" : ""}`}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </div>
 

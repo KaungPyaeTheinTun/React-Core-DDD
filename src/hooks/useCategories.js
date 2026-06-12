@@ -4,15 +4,13 @@ import { categoryApi } from "../api/categoryApi";
 export function useCategories() {
   const crud = useCrud({
     apiService: categoryApi,
-
     entityName: "categories",
-
+    mediaEnabled: true,
     initialForm: {
       name: "",
-      price: 0,
+      price: 1,
       description: "",
     },
-
     mapToPayload: (form) => ({
       Name: form.name,
       Price: Number(form.price),
@@ -23,7 +21,6 @@ export function useCategories() {
       price: item.price,
       description: item.description || "",
     }),
-
     mapToRow: (item) => ({
       id: item.id,
       name: item.name,
@@ -34,10 +31,11 @@ export function useCategories() {
 
   return {
     ...crud,
-
     categoryForm: crud.formData,
     setCategoryForm: crud.setFormData,
     targetCategory: crud.targetItem,
     handleFormSubmit: crud.handleSubmit,
+    handleEditClick: crud.handleEditClick,
+    resetForm: crud.resetForm,
   };
 }

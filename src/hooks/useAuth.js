@@ -1,7 +1,7 @@
 import { useDispatch } from "react-redux";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginThunk, registerThunk, clearError } from "../store/slices/authSlice";
+import { loginThunk, registerThunk } from "../store/slices/authSlice";
 import { showNewCommentToast } from "../utils/toast.jsx";
 
 export function useAuth() {
@@ -50,7 +50,6 @@ export function useAuth() {
         }
       }
 
-      dispatch(clearError());
     },
     [dispatch, navigate],
   );

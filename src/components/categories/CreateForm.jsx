@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import SectionCard from "../ui/SectionCard.jsx";
 import FormInput from "../ui/FormInput.jsx";
+import ImageUpload from "../ui/ImageUpload.jsx";
 
 const CreateForm = forwardRef(
   (
@@ -12,6 +13,8 @@ const CreateForm = forwardRef(
       handleFormSubmit,
       submitLoading,
       resetForm,
+      imageFiles,
+      setImageFiles,
     },
     ref,
   ) => {
@@ -34,7 +37,6 @@ const CreateForm = forwardRef(
               </label>
               <FormInput
                 placeholder="Wireless Mechanical Keyboard"
-                // Add || "" to ensure it is always a string
                 value={categoryForm?.name || ""}
                 onChange={(e) =>
                   setCategoryForm({ ...categoryForm, name: e.target.value })
@@ -49,7 +51,7 @@ const CreateForm = forwardRef(
               <FormInput
                 type="number"
                 step="0.01"
-                placeholder="89.99"
+                placeholder="9.99"
                 value={categoryForm?.price ?? ""}
                 onChange={(e) =>
                   setCategoryForm({ ...categoryForm, price: e.target.value })
@@ -71,6 +73,14 @@ const CreateForm = forwardRef(
                   })
                 }
                 required
+              />
+            </div>
+            <div className="md:col-span-4">
+              <ImageUpload
+                value={imageFiles}
+                onChange={setImageFiles}
+                label="Product Image"
+                accept="image/*"
               />
             </div>
             <div className="md:col-span-4 flex justify-end gap-2">

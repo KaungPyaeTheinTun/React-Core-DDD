@@ -9,7 +9,7 @@ const rowVariants = {
   }),
 };
 
-export default function DataTable({ columns, rows, renderActions }) {
+export default function DataTable({ columns, rows, renderActions, renderCell }) {
   const hasActions = !!renderActions;
 
   return (
@@ -38,7 +38,7 @@ export default function DataTable({ columns, rows, renderActions }) {
                       {colName}:
                     </span>
                     <span className="text-zinc-900 text-right break-words font-medium">
-                      {cellValues[index]}
+                      {renderCell ? renderCell(cellValues[index], index, row) : cellValues[index]}
                     </span>
                   </div>
                 ))}
@@ -93,7 +93,7 @@ export default function DataTable({ columns, rows, renderActions }) {
                       key={i}
                       className="px-4 py-3 text-zinc-800 max-w-xs truncate font-medium"
                     >
-                      {v}
+                      {renderCell ? renderCell(v, i - 1, row) : v}
                     </td>
                   ),
                 )}

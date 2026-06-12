@@ -1,4 +1,5 @@
 import { api } from "../services/api";
+
 export class BaseApi {
   constructor(endpoint) {
     this.endpoint = endpoint;
@@ -23,5 +24,21 @@ export class BaseApi {
 
   async remove(id) {
     return (await api.delete(`${this.endpoint}/${id}`)).data;
+  }
+
+  async getMedia(id) {
+    return (await api.get(`${this.endpoint}/${id}/media`)).data;
+  }
+
+  async uploadMedia(id, files) {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+    return (await api.post(`${this.endpoint}/${id}/media`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })).data;
+  }
+
+  async deleteMedia(id, mediaId) {
+    return (await api.delete(`${this.endpoint}/${id}/media/${mediaId}`)).data;
   }
 }

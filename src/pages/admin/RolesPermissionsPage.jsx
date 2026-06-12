@@ -242,43 +242,36 @@ export default function RolesPermissionsPage() {
 
   return (
     <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6 bg-white text-black">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold uppercase tracking-wider text-black">
-            {roleName} — Permissions
-          </h1>
-          <p className="text-xs text-zinc-500 font-medium mt-1">
-            Assign or revoke permission access for this role
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate("/admin/roles")}
-            className="px-5 py-2.5 rounded-xl border border-zinc-300 text-xs font-medium text-zinc-700 uppercase tracking-wider hover:bg-zinc-50 transition"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving || loading}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-black text-xs font-bold text-white uppercase tracking-wider hover:bg-zinc-800 disabled:opacity-40 transition"
-          >
-            {saving ? (
-              <>
-                <Loader className="h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Check className="h-4 w-4" />
-                Save
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      <SectionCard title="Permissions Assignment">
+      <SectionCard
+        title={roleName + " — Permissions"}
+        action={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate("/admin/roles")}
+              className="px-5 py-2.5 rounded-xl border border-zinc-300 text-xs font-medium text-zinc-700 uppercase tracking-wider hover:bg-zinc-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving || loading}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-black text-xs font-bold text-white uppercase tracking-wider hover:bg-zinc-800 disabled:opacity-40 transition"
+            >
+              {saving ? (
+                <>
+                  <Loader className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  Save
+                </>
+              )}
+            </button>
+          </div>
+        }
+      >
         {loading ? (
           <div className="flex items-center justify-center py-16 text-zinc-400">
             <Loader className="h-5 w-5 animate-spin mr-2" />

@@ -2,6 +2,14 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { showNewCommentToast } from "../utils/toast.jsx";
 import { setItems, setLoading, setError, selectEntityState } from "../store/slices/crudSlice";
+import { api } from "../services/api";
+
+const API_BASE = api.defaults.baseURL.replace(/\/api\/?$/, "");
+
+function resolveImageUrl(url) {
+  if (!url) return null;
+  return url.startsWith("http") ? url : `${API_BASE}${url}`;
+}
 
 export function useCrud({
   apiService,
@@ -10,6 +18,7 @@ export function useCrud({
   mapToForm,
   mapToRow,
   entityName,
+  mediaEnabled = false,
 }) {
   const dispatch = useDispatch();
   const entityState = useSelector(selectEntityState(entityName));
@@ -21,6 +30,10 @@ export function useCrud({
   const [submitLoading, setSubmitLoading] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [targetItem, setTargetItem] = useState(null);
+
+  const [imageFiles, setImageFiles] = useState([]);
+  const [existingMedia, setExistingMedia] = useState([]);
+  const [rowImages, setRowImages] = useState({});
 
   const fetchItems = useCallback(async () => {
     try {
@@ -46,7 +59,11 @@ export function useCrud({
     setFormData(initialForm);
     setEditingId(null);
     setShowForm(false);
-  }, [initialForm]);
+    if (mediaEnabled) {
+      setImageFiles([]);
+      setExistingMedia([]);
+    }
+  }, [initialForm, mediaEnabled]);
 
   const handleSubmit = useCallback(
     async (e) => {
@@ -56,26 +73,70 @@ export function useCrud({
         setSubmitLoading(true);
 
         const payload = mapToPayload(formData);
+        const images = mediaEnabled
+          ? Array.isArray(imageFiles) ? imageFiles : imageFiles ? [imageFiles] : []
+          : [];
 
         if (editingId) {
           await apiService.update(editingId, payload);
+
+          if (mediaEnabled) {
+            const newFiles = images.filter((f) => f instanceof File);
+            const currentUrls = images.filter((f) => typeof f === "string");
+            const toDelete = existingMedia.filter(
+              (m) => !currentUrls.includes(resolveImageUrl(m.url)),
+            );
+
+            for (const media of toDelete) {
+              await apiService.deleteMedia(editingId, media.id);
+            }
+            if (newFiles.length > 0) {
+              await apiService.uploadMedia(editingId, newFiles);
+            }
+          }
+
           showNewCommentToast("System", `${entityName} updated successfully.`);
         } else {
-          await apiService.create(payload);
+          const response = await apiService.create(payload);
+
+          if (mediaEnabled) {
+            const newId = response?.data?.id;
+            if (newId && images.length > 0) {
+              const files = images.filter((f) => f instanceof File);
+              if (files.length > 0) {
+                await apiService.uploadMedia(newId, files);
+              }
+            }
+          }
+
           showNewCommentToast("System", `${entityName} created successfully.`);
         }
 
         await fetchItems();
         resetForm();
+      } catch (err) {
+        if (err.response?.status === 403) {
+          window.location.href = "/unauthorized";
+          return;
+        }
+        const data = err.response?.data;
+        let message = data?.message || data?.title || "Operation failed.";
+        if (data?.errors) {
+          const details = Object.entries(data.errors)
+            .map(([field, msgs]) => `${field}: ${msgs.join(", ")}`)
+            .join("; ");
+          message = details || message;
+        }
+        showNewCommentToast("System", message);
       } finally {
         setSubmitLoading(false);
       }
     },
-    [editingId, formData, apiService, fetchItems, resetForm, mapToPayload, entityName],
+    [editingId, formData, apiService, fetchItems, resetForm, mapToPayload, entityName, mediaEnabled, imageFiles, existingMedia],
   );
 
   const handleEditClick = useCallback(
-    (row) => {
+    async (row) => {
       const item = items.find((x) => x.id === row.id);
 
       if (!item) return;
@@ -83,8 +144,23 @@ export function useCrud({
       setEditingId(item.id);
       setFormData(mapToForm(item));
       setShowForm(true);
+
+      if (mediaEnabled) {
+        setImageFiles([]);
+        setExistingMedia([]);
+        try {
+          const response = await apiService.getMedia(item.id);
+          const mediaList = response?.data || [];
+          setExistingMedia(mediaList);
+          if (mediaList.length > 0) {
+            setImageFiles(mediaList.map((m) => resolveImageUrl(m.url)));
+          }
+        } catch {
+          // media endpoint may not exist
+        }
+      }
     },
-    [items, mapToForm],
+    [items, mapToForm, mediaEnabled, apiService],
   );
 
   const openDeleteConfirmation = useCallback(
@@ -102,23 +178,69 @@ export function useCrud({
   const handleConfirmDelete = useCallback(async () => {
     if (!targetItem) return;
 
-    await apiService.remove(targetItem.id);
+    try {
+      await apiService.remove(targetItem.id);
 
-    showNewCommentToast("System", `${entityName} deleted successfully.`);
+      showNewCommentToast("System", `${entityName} deleted successfully.`);
 
-    if (editingId === targetItem.id) {
-      resetForm();
+      if (editingId === targetItem.id) {
+        resetForm();
+      }
+
+      setDeleteModalOpen(false);
+      setTargetItem(null);
+
+      await fetchItems();
+    } catch (err) {
+      if (err.response?.status === 403) {
+        window.location.href = "/unauthorized";
+        return;
+      }
+      showNewCommentToast("System", err.response?.data?.message || "Delete failed.");
+      setDeleteModalOpen(false);
     }
-
-    setDeleteModalOpen(false);
-    setTargetItem(null);
-
-    await fetchItems();
   }, [targetItem, editingId, apiService, fetchItems, resetForm, entityName]);
 
+  useEffect(() => {
+    if (!mediaEnabled || items.length === 0) {
+      setRowImages({});
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      const images = {};
+      for (const item of items) {
+        try {
+          const response = await apiService.getMedia(item.id);
+          const list = response?.data || [];
+          if (list.length > 0) {
+            images[item.id] = list.map((m) => resolveImageUrl(m.url));
+          }
+        } catch {}
+      }
+      if (!cancelled) setRowImages(images);
+    };
+
+    load();
+    return () => { cancelled = true; };
+  }, [mediaEnabled, items, apiService]);
+
   const formattedRows = useMemo(() => {
-    return items.map(mapToRow);
-  }, [items, mapToRow]);
+    return items.map((item) => {
+      const base = mapToRow(item);
+      if (mediaEnabled) {
+        const { id, ...rest } = base;
+        return { id, imageUrls: rowImages[item.id] || [], ...rest };
+      }
+      return base;
+    });
+  }, [items, mapToRow, mediaEnabled, rowImages]);
+
+  const mediaOutput = mediaEnabled
+    ? { imageFiles, setImageFiles, existingMedia }
+    : {};
 
   return {
     items,
@@ -140,5 +262,6 @@ export function useCrud({
     handleEditClick,
     openDeleteConfirmation,
     handleConfirmDelete,
+    ...mediaOutput,
   };
 }

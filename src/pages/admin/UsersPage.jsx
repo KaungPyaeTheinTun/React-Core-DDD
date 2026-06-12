@@ -1,8 +1,49 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { KeyRound } from "lucide-react";
 import SectionCard from "../../components/ui/SectionCard.jsx";
 import DataTable from "../../components/ui/DataTable.jsx";
 import EditForm from "../../components/users/EditForm.jsx";
 import { useUsers } from "../../hooks/useUsers.js";
+import { userApi } from "../../api/userApi.js";
+
+function AssignRoleButton({ row, navigate }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  return (
+    <div className="flex w-full items-center justify-end gap-1 relative">
+      <button
+        onClick={() =>
+          navigate(`/admin/users/${row.id}/roles`, {
+            state: {
+              userName: row.fullName,
+              userEmail: row.email,
+            },
+          })
+        }
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        className="rounded-lg p-2 text-indigo-500 transition hover:bg-indigo-50 hover:text-indigo-700"
+      >
+        <KeyRound className="h-4 w-4" />
+      </button>
+      <AnimatePresence>
+        {showTooltip && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded bg-zinc-900 px-2 py-1 text-[10px] font-medium text-white"
+          >
+            Assign Roles
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -21,10 +62,77 @@ const cardVariants = {
 };
 
 export default function UsersPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { loading, error, showForm, formData, setFormData, submitLoading, formattedRows, handleSubmit, resetForm } =
     useUsers();
+  const [roleNamesByUserId, setRoleNamesByUserId] = useState({});
 
-  const columns = ["Name", "Email", "Status"];
+  const columns = ["Name", "Email", "Roles", "Status"];
+
+  useEffect(() => {
+    const updatedUserRoles = location.state?.updatedUserRoles;
+    if (!updatedUserRoles?.userId) return;
+
+    setRoleNamesByUserId((current) => ({
+      ...current,
+      [updatedUserRoles.userId]: updatedUserRoles.roleNames?.join(", ") || "-",
+    }));
+
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
+
+  useEffect(() => {
+    if (loading || formattedRows.length === 0) return;
+
+    let cancelled = false;
+
+    async function loadUserRoles() {
+      const entries = await Promise.all(
+        formattedRows.map(async (user) => {
+          try {
+            const response = await userApi.getRoles(user.id);
+            const roles = response?.data || [];
+            const assignedRoleNames = roles
+              .filter((role) => role.isAssigned ?? role.IsAssigned)
+              .map((role) => role.roleName ?? role.RoleName)
+              .filter(Boolean);
+
+            return [user.id, assignedRoleNames.join(", ") || "-"];
+          } catch {
+            return [user.id, user.roles || "-"];
+          }
+        }),
+      );
+
+      if (!cancelled) {
+        setRoleNamesByUserId((current) => ({
+          ...current,
+          ...Object.fromEntries(entries),
+        }));
+      }
+    }
+
+    loadUserRoles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [formattedRows, loading]);
+
+  const rows = useMemo(
+    () =>
+      formattedRows.map((row) => ({
+        ...row,
+        roles: roleNamesByUserId[row.id] || row.roles || "-",
+      })),
+    [formattedRows, roleNamesByUserId],
+  );
+
+  const renderTableActions = useCallback(
+    (row) => <AssignRoleButton row={row} navigate={navigate} />,
+    [navigate],
+  );
 
   return (
     <motion.div
@@ -55,12 +163,16 @@ export default function UsersPage() {
             <div className="py-10 text-center text-black text-xs font-medium uppercase tracking-wider border border-zinc-200 rounded-xl bg-zinc-50">
               {error}
             </div>
-          ) : formattedRows.length === 0 ? (
+          ) : rows.length === 0 ? (
             <div className="py-10 text-center text-zinc-400 text-sm">
               No active users registered.
             </div>
           ) : (
-            <DataTable columns={columns} rows={formattedRows} />
+            <DataTable
+              columns={columns}
+              rows={rows}
+              renderActions={renderTableActions}
+            />
           )}
         </SectionCard>
       </motion.div>

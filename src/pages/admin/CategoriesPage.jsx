@@ -6,17 +6,18 @@ import DeleteModal from "../../components/ui/DeleteModal.jsx";
 import CreateForm from "../../components/categories/CreateForm.jsx";
 import EditForm from "../../components/categories/EditForm.jsx";
 import { useCategories } from "../../hooks/useCategories.js";
-import { PackagePlus, Trash2, Edit3, X } from "lucide-react";
+import { Image, PackagePlus, Trash2, Edit3, X } from "lucide-react";
 
 const pageVariants = {
   initial: { opacity: 0 },
-  animate: { opacity: 1, transition: { staggerChildren: 0.12 },},
+  animate: { opacity: 1, transition: { staggerChildren: 0.12 } },
 };
 const cardVariants = {
   initial: { opacity: 0, y: 16, scale: 0.99 },
-  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] },},
-  exit: { opacity: 0, y: -12, scale: 0.99, transition: { duration: 0.2 },},
+  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } },
+  exit: { opacity: 0, y: -12, scale: 0.99, transition: { duration: 0.2 } },
 };
+
 export default function CategoriesPage() {
   const {
     loading,
@@ -36,8 +37,40 @@ export default function CategoriesPage() {
     openDeleteConfirmation,
     handleConfirmDelete,
     resetForm,
+    imageFiles,
+    setImageFiles,
   } = useCategories();
-  const columns = ["Product Name", "Price", "Description"];
+
+  const columns = ["Image", "Product Name", "Price", "Description"];
+
+  const renderCell = useCallback((value, index) => {
+    if (index === 0) {
+      const urls = value || [];
+      return urls.length > 0 ? (
+        <div className="flex -space-x-1.5">
+          {urls.slice(0, 3).map((url, i) => (
+            <img
+              key={i}
+              src={url}
+              alt=""
+              className="h-8 w-8 rounded-lg border-2 border-white object-cover"
+            />
+          ))}
+          {urls.length > 3 && (
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-white bg-zinc-100 text-[10px] font-bold text-zinc-500">
+              +{urls.length - 3}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-300">
+          <Image className="h-4 w-4" />
+        </div>
+      );
+    }
+    return value;
+  }, []);
+
   const renderTableActions = useCallback(
     (row) => (
       <div className="flex w-full items-center justify-end gap-1">
@@ -90,6 +123,8 @@ export default function CategoriesPage() {
             handleFormSubmit={handleFormSubmit}
             submitLoading={submitLoading}
             resetForm={resetForm}
+            imageFiles={imageFiles}
+            setImageFiles={setImageFiles}
           />
         )}
 
@@ -101,6 +136,8 @@ export default function CategoriesPage() {
             handleFormSubmit={handleFormSubmit}
             submitLoading={submitLoading}
             resetForm={resetForm}
+            imageFiles={imageFiles}
+            setImageFiles={setImageFiles}
           />
         )}
       </AnimatePresence>
@@ -124,6 +161,7 @@ export default function CategoriesPage() {
               columns={columns}
               rows={formattedRows}
               renderActions={renderTableActions}
+              renderCell={renderCell}
             />
           )}
         </SectionCard>

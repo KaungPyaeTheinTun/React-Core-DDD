@@ -2,8 +2,8 @@ import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import SectionCard from "../ui/SectionCard.jsx";
 import FormInput from "../ui/FormInput.jsx";
+import ImageUpload from "../ui/ImageUpload.jsx";
 
-// 2. Wrap your function component inside forwardRef()
 const EditForm = forwardRef(({
   cardVariants,
   categoryForm,
@@ -11,10 +11,12 @@ const EditForm = forwardRef(({
   handleFormSubmit,
   submitLoading,
   resetForm,
-}, ref) => { // 3. Add the 'ref' parameter as the second argument here
+  imageFiles,
+  setImageFiles,
+}, ref) => {
   return (
     <motion.div
-      ref={ref} // 4. Attach the forwarded ref to your outer motion layout node
+      ref={ref}
       key="edit-category-form"
       variants={cardVariants}
       initial="initial"
@@ -46,7 +48,7 @@ const EditForm = forwardRef(({
             <FormInput
               type="number"
               step="0.01"
-              placeholder="89.99"
+                placeholder="9.99"
               value={categoryForm.price}
               onChange={(e) =>
                 setCategoryForm({ ...categoryForm, price: e.target.value })
@@ -66,6 +68,14 @@ const EditForm = forwardRef(({
               }
               required
             />
+          </div>
+            <div className="md:col-span-4">
+              <ImageUpload
+                value={imageFiles}
+                onChange={setImageFiles}
+                label="Product Image"
+                accept="image/*"
+              />
           </div>
           <div className="md:col-span-4 flex justify-end gap-2">
             <button
@@ -89,5 +99,4 @@ const EditForm = forwardRef(({
   );
 });
 
-// 5. Explicitly export the forwardRef wrapper construct
 export default EditForm;

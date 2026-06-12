@@ -26,6 +26,9 @@ export function useUsers() {
       id: item.id,
       fullName: item.fullName,
       email: item.email,
+      roles: Array.isArray(item.roles)
+        ? item.roles.join(", ")
+        : item.roles || item.roleNames || "",
       status: item.status,
     }),
   });

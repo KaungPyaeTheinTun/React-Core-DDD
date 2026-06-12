@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -19,6 +20,8 @@ const navItems = [
 ];
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
+  const [hoveredItem, setHoveredItem] = useState(null);
+
   const linkClass = ({ isActive }) =>
     `relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
       isActive
@@ -40,11 +43,28 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
               key={item.to}
               to={item.to}
               className={linkClass}
+              onMouseEnter={() => setHoveredItem(item.to)}
+              onMouseLeave={() => setHoveredItem(null)}
               title={collapsed ? item.label : undefined}
             >
               <div className="shrink-0 flex items-center justify-center w-5 h-5">
                 <item.icon className="h-4 w-4" />
               </div>
+
+              <AnimatePresence>
+                {collapsed && hoveredItem === item.to && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -6, scale: 0.95 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -6, scale: 0.95 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="absolute left-full ml-2 px-2.5 py-1.5 rounded-lg bg-black text-white text-xs font-bold uppercase tracking-wider whitespace-nowrap pointer-events-none z-50 shadow-lg"
+                  >
+                    {item.label}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <motion.span
                 animate={{ opacity: collapsed ? 0 : 1, width: collapsed ? 0 : "auto" }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
