@@ -1,35 +1,28 @@
 import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { LayoutDashboard } from "lucide-react";
 import { Slide, ToastContainer } from "react-toastify";
 
-import AdminLayout from "../components/AdminLayout.jsx";
-import Spinner from "../components/Spinner.jsx";
+import AdminLayout from "../components/layouts/AdminLayout.jsx";
+import UserLayout from "../components/layouts/UserLayout.jsx";
+import Spinner from "../components/ui/Spinner.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
+import AdminRoute from "./AdminRoute.jsx";
+import UserRoute from "./UserRoute.jsx";
 
-const LoginPage = lazy(() => import("../pages/LoginPage.jsx"));
-const RegisterPage = lazy(() => import("../pages/RegisterPage.jsx"));
-const UsersPage = lazy(() => import("../pages/UsersPage.jsx"));
-const CategoryPage = lazy(() => import("../pages/CategoriesPage.jsx"));
-const ModuleGeneratorPage = lazy(() => import("../pages/ModuleGeneratorPage.jsx"));
+const LoginPage = lazy(() => import("../pages/auth/LoginPage.jsx"));
+const RegisterPage = lazy(() => import("../pages/auth/RegisterPage.jsx"));
+const NotFoundPage = lazy(() => import("../pages/NotFoundPage.jsx"));
+const UnauthorizedPage = lazy(() => import("../pages/UnauthorizedPage.jsx"));
 
-function NotFoundPage() {
-  return (
-    <div className="grid min-h-screen place-items-center bg-white text-black p-4">
-      <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-8 text-center max-w-sm w-full">
-        <LayoutDashboard className="mx-auto mb-4 h-10 w-10 text-black" />
+const UsersPage = lazy(() => import("../pages/admin/UsersPage.jsx"));
+const CategoriesPage = lazy(() => import("../pages/admin/CategoriesPage.jsx"));
+const RolesPage = lazy(() => import("../pages/admin/RolesPage.jsx"));
+const RolesPermissionsPage = lazy(() => import("../pages/admin/RolesPermissionsPage.jsx"));
+const PermissionsPage = lazy(() => import("../pages/admin/PermissionsPage.jsx"));
+const ModuleGeneratorPage = lazy(() => import("../pages/admin/ModuleGeneratorPage.jsx"));
 
-        <h1 className="text-xl font-bold uppercase tracking-wider">
-          Page not found
-        </h1>
-
-        <p className="mt-2 text-sm text-zinc-500">
-          Use the navigation or return to login.
-        </p>
-      </div>
-    </div>
-  );
-}
+const DashboardPage = lazy(() => import("../pages/user/DashboardPage.jsx"));
+const ProfilePage = lazy(() => import("../pages/user/ProfilePage.jsx"));
 
 export default function App() {
   return (
@@ -40,13 +33,29 @@ export default function App() {
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-        {/* Protected Routes */}
+        {/* Admin Routes */}
         <Route element={<ProtectedRoute />}>
-          <Route element={<AdminLayout />}>
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/categories" element={<CategoryPage />} />
-            <Route path="/module-generator" element={<ModuleGeneratorPage />} />
+          <Route element={<AdminRoute />}>
+            <Route element={<AdminLayout />}>
+              <Route path="/admin/users" element={<UsersPage />} />
+              <Route path="/admin/categories" element={<CategoriesPage />} />
+              <Route path="/admin/roles" element={<RolesPage />} />
+              <Route path="/admin/roles/:id/permissions" element={<RolesPermissionsPage />} />
+              <Route path="/admin/permissions" element={<PermissionsPage />} />
+              <Route path="/admin/module-generator" element={<ModuleGeneratorPage />} />
+            </Route>
+          </Route>
+        </Route>
+
+        {/* User Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<UserRoute />}>
+            <Route element={<UserLayout />}>
+              <Route path="/user/dashboard" element={<DashboardPage />} />
+              <Route path="/user/profile" element={<ProfilePage />} />
+            </Route>
           </Route>
         </Route>
 

@@ -22,7 +22,6 @@ export default function DeleteModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* ANIMATED BACKDROP */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -32,7 +31,6 @@ export default function DeleteModal({
         className="absolute inset-0 bg-black/40 backdrop-blur-xs"
       />
 
-      {/* ANIMATED DIALOG BOX */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

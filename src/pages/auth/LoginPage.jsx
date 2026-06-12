@@ -1,17 +1,21 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import FormInput from "../components/FormInput.jsx";
-import SectionCard from "../components/SectionCard.jsx";
-import { useAuth } from "../hooks/useAuth.js"; // Import Unified Hook
+import { useSelector } from "react-redux";
+import { Eye, EyeOff } from "lucide-react";
+import FormInput from "../../components/ui/FormInput.jsx";
+import SectionCard from "../../components/ui/SectionCard.jsx";
+import { selectAuth } from "../../store/slices/authSlice";
+import { useAuth } from "../../hooks/useAuth.js";
 
 export default function LoginPage() {
-  const { formData, error, loading, handleChange, handleAuthSubmit } =
-    useAuth();
+  const { handleAuthSubmit } = useAuth();
+  const { loading, error } = useSelector(selectAuth);
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="grid min-h-screen place-items-center bg-white p-4">
       <div className="w-full max-w-sm sm:max-w-md">
         <SectionCard title="Login">
-          {/* Submit with isRegister set to false */}
           <form
             onSubmit={(e) => handleAuthSubmit(e, false)}
             className="space-y-4"
@@ -26,18 +30,23 @@ export default function LoginPage() {
               placeholder="Email"
               type="email"
               name="email"
-              value={formData.email}
-              onChange={handleChange}
               required
             />
-            <FormInput
-              placeholder="Password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+            <div className="relative">
+              <FormInput
+                placeholder="Password"
+                type={showPassword ? "text" : "password"}
+                name="password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
 
             <button
               type="submit"

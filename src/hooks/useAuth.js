@@ -1,92 +1,59 @@
-import { useState, useCallback, useRef } from "react";
+import { useDispatch } from "react-redux";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { authApi } from "../api/authApi";
+import { loginThunk, registerThunk, clearError } from "../store/slices/authSlice";
 import { showNewCommentToast } from "../utils/toast.jsx";
 
 export function useAuth() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const errorRef = useRef("");
-  const [error, setErrorState] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-  });
-
-  // Sync both ref and state so the value persists across re-renders
-  const setError = useCallback((msg) => {
-    errorRef.current = msg;
-    setErrorState(msg);
-  }, []);
-
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  }, []);
 
   const handleAuthSubmit = useCallback(
     async (e, isRegister = false) => {
       e.preventDefault();
-      setError("");
-      setLoading(true);
 
-      try {
-        if (isRegister) {
-          await authApi.register(formData);
+      const form = e.target.closest("form");
+      const formDataObj = new FormData(form);
+      const formData = {
+        fullName: formDataObj.get("fullName") || "",
+        email: formDataObj.get("email") || "",
+        password: formDataObj.get("password") || "",
+      };
+
+      if (isRegister) {
+        const result = await dispatch(registerThunk(formData));
+        if (registerThunk.fulfilled.match(result)) {
           showNewCommentToast(
             "Account",
             "Account created successfully! Please sign in.",
           );
           navigate("/login");
-        } else {
-          const response = await authApi.login({
-            email: formData.email,
-            password: formData.password,
-          });
+        }
+      } else {
+        const result = await dispatch(
+          loginThunk({ email: formData.email, password: formData.password }),
+        );
+        if (loginThunk.fulfilled.match(result)) {
+          const user = result.payload.user;
+          const roles = result.payload.roles;
 
-          const authData = response.data.data;
+          showNewCommentToast(
+            "System",
+            `Welcome back, ${user.fullName}!`,
+          );
 
-          if (authData?.access_token) {
-            localStorage.setItem("token", authData.access_token);
-            localStorage.setItem("refresh_token", authData.refresh_token);
-            localStorage.setItem("user", JSON.stringify(authData.user));
-
-            showNewCommentToast(
-              "System",
-              `Welcome back, ${authData.user.fullName}!`,
-            );
-
-            navigate("/users");
+          if (roles.some((r) => r.toLowerCase() === "admin")) {
+            navigate("/admin/users");
           } else {
-            setError("Authentication payload missing.");
+            navigate("/user/dashboard");
           }
         }
-      } catch (err) {
-        console.log("STATUS:", err.response?.status);
-        console.log("DATA:", err.response?.data);
-        console.log("FULL ERROR:", err);
-
-        const fallbackMsg = isRegister
-          ? "Registration failed. Try again."
-          : "Invalid email or password";
-
-        setError(err.response?.data?.message || fallbackMsg);
-      } finally {
-        setLoading(false);
-        // Restore error from ref in case the re-render wiped the state
-        setErrorState(errorRef.current);
       }
+
+      dispatch(clearError());
     },
-    [formData, navigate, setError],
+    [dispatch, navigate],
   );
 
-  return {
-    formData,
-    error,
-    loading,
-    handleChange,
-    handleAuthSubmit,
-  };
+  return { handleAuthSubmit };
 }

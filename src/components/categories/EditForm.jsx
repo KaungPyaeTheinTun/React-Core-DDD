@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import { motion } from "framer-motion";
-import SectionCard from "../SectionCard.jsx";
-import FormInput from "../FormInput.jsx";
+import SectionCard from "../ui/SectionCard.jsx";
+import FormInput from "../ui/FormInput.jsx";
 
 // 2. Wrap your function component inside forwardRef()
 const EditForm = forwardRef(({

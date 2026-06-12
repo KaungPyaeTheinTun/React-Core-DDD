@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { showNewCommentToast } from "../utils/toast.jsx";
+import { setItems, setLoading, setError, selectEntityState } from "../store/slices/crudSlice";
 
 export function useCrud({
   apiService,
@@ -9,36 +11,32 @@ export function useCrud({
   mapToRow,
   entityName,
 }) {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const dispatch = useDispatch();
+  const entityState = useSelector(selectEntityState(entityName));
+  const { items, loading, error } = entityState;
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-
   const [formData, setFormData] = useState(initialForm);
-
   const [submitLoading, setSubmitLoading] = useState(false);
-
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-
   const [targetItem, setTargetItem] = useState(null);
 
   const fetchItems = useCallback(async () => {
     try {
-      setLoading(true);
+      dispatch(setLoading({ entity: entityName, loading: true }));
+      dispatch(setError({ entity: entityName, error: null }));
 
       const response = await apiService.list();
 
-      // console.log("API Response:", response);
-
-      setItems(response?.data?.items || []);
+      dispatch(setItems({ entity: entityName, items: response?.data?.items || [] }));
     } catch (err) {
       console.error(err);
+      dispatch(setError({ entity: entityName, error: err.message }));
     } finally {
-      setLoading(false);
+      dispatch(setLoading({ entity: entityName, loading: false }));
     }
-  }, [apiService]);
+  }, [dispatch, apiService, entityName]);
 
   useEffect(() => {
     fetchItems();
@@ -61,11 +59,9 @@ export function useCrud({
 
         if (editingId) {
           await apiService.update(editingId, payload);
-
           showNewCommentToast("System", `${entityName} updated successfully.`);
         } else {
           await apiService.create(payload);
-
           showNewCommentToast("System", `${entityName} created successfully.`);
         }
 
@@ -75,7 +71,7 @@ export function useCrud({
         setSubmitLoading(false);
       }
     },
-    [editingId, formData, apiService, fetchItems, resetForm, mapToPayload],
+    [editingId, formData, apiService, fetchItems, resetForm, mapToPayload, entityName],
   );
 
   const handleEditClick = useCallback(
@@ -85,9 +81,7 @@ export function useCrud({
       if (!item) return;
 
       setEditingId(item.id);
-
       setFormData(mapToForm(item));
-
       setShowForm(true);
     },
     [items, mapToForm],
@@ -111,7 +105,7 @@ export function useCrud({
     await apiService.remove(targetItem.id);
 
     showNewCommentToast("System", `${entityName} deleted successfully.`);
-    
+
     if (editingId === targetItem.id) {
       resetForm();
     }
@@ -120,7 +114,7 @@ export function useCrud({
     setTargetItem(null);
 
     await fetchItems();
-  }, [targetItem, editingId, apiService, fetchItems, resetForm]);
+  }, [targetItem, editingId, apiService, fetchItems, resetForm, entityName]);
 
   const formattedRows = useMemo(() => {
     return items.map(mapToRow);
@@ -128,37 +122,23 @@ export function useCrud({
 
   return {
     items,
-
     loading,
     error,
-
     showForm,
     setShowForm,
-
     editingId,
-
     formData,
     setFormData,
-
     submitLoading,
-
     deleteModalOpen,
     setDeleteModalOpen,
-
     targetItem,
-
     formattedRows,
-
     fetchItems,
-
     resetForm,
-
     handleSubmit,
-
     handleEditClick,
-
     openDeleteConfirmation,
-
     handleConfirmDelete,
   };
 }

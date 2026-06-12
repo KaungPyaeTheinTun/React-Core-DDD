@@ -1,18 +1,20 @@
-import { motion } from "framer-motion"; // Added motion
+import { motion } from "framer-motion";
 
 const rowVariants = {
   hidden: { opacity: 0, x: -4 },
   visible: (index) => ({
     opacity: 1,
     x: 0,
-    transition: { delay: index * 0.03, duration: 0.25, ease: "easeOut" }, // ⚡️ Row stagger
+    transition: { delay: index * 0.03, duration: 0.25, ease: "easeOut" },
   }),
 };
 
 export default function DataTable({ columns, rows, renderActions }) {
+  const hasActions = !!renderActions;
+
   return (
     <div className="w-full">
-      {/* MOBILE RESPONSIVE CARD LAYOUT */}
+      {/* Mobile */}
       <div className="block md:hidden space-y-3">
         {rows.map((row, index) => {
           const cellValues = Object.values(row).slice(1);
@@ -42,18 +44,20 @@ export default function DataTable({ columns, rows, renderActions }) {
                 ))}
               </div>
 
-              <div className="pt-3 border-t border-zinc-100 flex items-center justify-between">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                  Actions:
-                </span>
-                <div>{renderActions(row)}</div>
-              </div>
+              {hasActions && (
+                <div className="pt-3 border-t border-zinc-100 flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                    Actions:
+                  </span>
+                  <div>{renderActions(row)}</div>
+                </div>
+              )}
             </motion.div>
           );
         })}
       </div>
 
-      {/* STANDARD DESKTOP VIEWPORT TABLE */}
+      {/* Desktop */}
       <div className="hidden md:block overflow-x-auto rounded-xl border border-zinc-200 bg-white">
         <table className="min-w-full divide-y divide-zinc-200 text-left text-sm">
           <thead className="bg-zinc-50 text-zinc-500">
@@ -66,9 +70,11 @@ export default function DataTable({ columns, rows, renderActions }) {
                   {c}
                 </th>
               ))}
-              <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-right pr-6">
-                Actions
-              </th>
+              {hasActions && (
+                <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-right pr-6">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-200 bg-white">
@@ -91,9 +97,11 @@ export default function DataTable({ columns, rows, renderActions }) {
                     </td>
                   ),
                 )}
-                <td className="px-4 py-3 text-right pr-6">
-                  {renderActions(row)}
-                </td>
+                {hasActions && (
+                  <td className="px-4 py-3 text-right pr-6">
+                    {renderActions(row)}
+                  </td>
+                )}
               </motion.tr>
             ))}
           </tbody>

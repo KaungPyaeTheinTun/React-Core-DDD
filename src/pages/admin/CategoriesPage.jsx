@@ -1,11 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback } from "react";
-import SectionCard from "../components/SectionCard.jsx";
-import DataTable from "../components/DataTable.jsx";
-import DeleteModal from "../components/DeleteModal.jsx";
-import CreateForm from "../components/categories/CreateForm.jsx";
-import EditForm from "../components/categories/EditForm.jsx";
-import { useCategories } from "../hooks/useCategories.js";
+import SectionCard from "../../components/ui/SectionCard.jsx";
+import DataTable from "../../components/ui/DataTable.jsx";
+import DeleteModal from "../../components/ui/DeleteModal.jsx";
+import CreateForm from "../../components/categories/CreateForm.jsx";
+import EditForm from "../../components/categories/EditForm.jsx";
+import { useCategories } from "../../hooks/useCategories.js";
 import { PackagePlus, Trash2, Edit3, X } from "lucide-react";
 
 const pageVariants = {
@@ -82,7 +82,6 @@ export default function CategoriesPage() {
       className="p-4 md:p-6 max-w-full mx-auto space-y-6 bg-white text-black"
     >
       <AnimatePresence mode="popLayout">
-        {/* 1. CREATE MODE FORM PANEL */}
         {showForm && !editingId && (
           <CreateForm
             cardVariants={cardVariants}
@@ -94,7 +93,6 @@ export default function CategoriesPage() {
           />
         )}
 
-        {/* 2. EDIT MODE FORM PANEL */}
         {editingId && (
           <EditForm
             cardVariants={cardVariants}
@@ -107,7 +105,6 @@ export default function CategoriesPage() {
         )}
       </AnimatePresence>
 
-      {/* 3. MAIN DATA TABLE REGION */}
       <motion.div variants={cardVariants}>
         <SectionCard title="Categories" action={headerAction}>
           {loading ? (
@@ -115,8 +112,8 @@ export default function CategoriesPage() {
               Synchronizing live category data...
             </div>
           ) : error ? (
-            <div className="py-12 text-center text-black text-xs font-medium uppercase tracking-wider border border-zinc-200 rounded-xl bg-zinc-50">
-              {error}
+            <div className="py-12 text-center text-zinc-400 text-xs font-medium uppercase tracking-wider">
+              Category management coming soon.
             </div>
           ) : formattedRows.length === 0 ? (
             <div className="py-12 text-center text-zinc-400 text-sm">

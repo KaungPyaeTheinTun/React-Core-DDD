@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import SectionCard from "../SectionCard.jsx";
-import FormInput from "../FormInput.jsx";
+import SectionCard from "../ui/SectionCard.jsx";
+import FormInput from "../ui/FormInput.jsx";
 
 export default function EditForm({
   cardVariants,
