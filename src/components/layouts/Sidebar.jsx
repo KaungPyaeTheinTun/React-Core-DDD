@@ -9,10 +9,12 @@ import {
   FileCode2,
   ChevronLeft,
   ChevronRight,
+  Fingerprint,
 } from "lucide-react";
 
 const navItems = [
   { to: "/admin/users", icon: Users, label: "Users" },
+  { to: "/admin/humans", icon: Fingerprint, label: "Humans" },
   { to: "/admin/categories", icon: Package, label: "Categories" },
   { to: "/admin/roles", icon: Shield, label: "Roles" },
   { to: "/admin/permissions", icon: KeyRound, label: "Permissions" },

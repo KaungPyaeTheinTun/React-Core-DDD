@@ -9,6 +9,7 @@ import {
   Trash2,
   WandSparkles,
   GripVertical,
+  X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
@@ -18,7 +19,7 @@ import FormInput from "../../components/ui/FormInput.jsx";
 import SectionCard from "../../components/ui/SectionCard.jsx";
 import { showNewCommentToast } from "../../utils/toast.jsx";
 
-const fieldTypes = ["string", "int", "decimal", "bool", "DateTime"];
+const fieldTypes = ["string", "int", "decimal", "bool", "DateTime", "enum"];
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -44,6 +45,7 @@ const createField = () => ({
   isNullable: false,
   min: "",
   max: "",
+  enumValues: [],
 });
 
 const toggleClass =
@@ -79,6 +81,28 @@ export default function ModuleGeneratorPage() {
       current.length === 1
         ? [createField()]
         : current.filter((field) => field.id !== id),
+    );
+  };
+
+  const addEnumTag = (id, value) => {
+    const tag = value.trim();
+    if (!tag) return;
+    setFields((current) =>
+      current.map((field) =>
+        field.id === id && !field.enumValues.includes(tag)
+          ? { ...field, enumValues: [...field.enumValues, tag] }
+          : field,
+      ),
+    );
+  };
+
+  const removeEnumTag = (id, tag) => {
+    setFields((current) =>
+      current.map((field) =>
+        field.id === id
+          ? { ...field, enumValues: field.enumValues.filter((t) => t !== tag) }
+          : field,
+      ),
     );
   };
 
@@ -135,6 +159,13 @@ export default function ModuleGeneratorPage() {
               field.max === "" || field.max === null
                 ? null
                 : Number(field.max),
+          };
+        }
+
+        if (field.type === "enum") {
+          return {
+            ...base,
+            enumValues: field.enumValues.join(","),
           };
         }
 
@@ -306,6 +337,11 @@ export default function ModuleGeneratorPage() {
                             field.type === "decimal";
                           const isNumeric =
                             field.type === "int" || field.type === "decimal";
+                          const isEnum = field.type === "enum";
+                          const noSize =
+                            field.type === "bool" ||
+                            field.type === "DateTime" ||
+                            field.type === "enum";
 
                           return (
                             <tr
@@ -331,9 +367,12 @@ export default function ModuleGeneratorPage() {
                                   onChange={(event) => {
                                     const newType = event.target.value;
                                     const patch = { type: newType };
-                                    if (newType === "bool" || newType === "DateTime") {
+                                    if (newType === "bool" || newType === "DateTime" || newType === "enum") {
                                       patch.min = "";
                                       patch.max = "";
+                                    }
+                                    if (newType !== "enum") {
+                                      patch.enumValues = [];
                                     }
                                     updateField(field.id, patch);
                                   }}
@@ -357,9 +396,11 @@ export default function ModuleGeneratorPage() {
                                       length: event.target.value,
                                     })
                                   }
-                                  placeholder="255"
-                                  disabled={submitting}
-                                  className="py-2 text-sm"
+                                  placeholder={noSize ? "Disable" : "255"}
+                                  disabled={submitting || noSize}
+                                  className={`py-2 text-sm ${
+                                    noSize ? "opacity-30" : ""
+                                  }`}
                                 />
                               </td>
                               <td className="px-4 py-2.5 text-center">
@@ -422,40 +463,93 @@ export default function ModuleGeneratorPage() {
                                   </div>
                                 </label>
                               </td>
-                              <td className="px-4 py-2.5">
-                                <FormInput
-                                  type="number"
-                                  step={isNumeric ? "0.01" : "1"}
-                                  value={field.min}
-                                  onChange={(event) =>
-                                    updateField(field.id, {
-                                      min: event.target.value,
-                                    })
-                                  }
-                                  placeholder={field.type === "string" ? "1" : "0"}
-                                  disabled={submitting || !supportsRange}
-                                  className={`py-2 text-sm ${
-                                    !supportsRange ? "opacity-30" : ""
-                                  }`}
-                                />
-                              </td>
-                              <td className="px-4 py-2.5">
-                                <FormInput
-                                  type="number"
-                                  step={isNumeric ? "0.01" : "1"}
-                                  value={field.max}
-                                  onChange={(event) =>
-                                    updateField(field.id, {
-                                      max: event.target.value,
-                                    })
-                                  }
-                                  placeholder={field.type === "string" ? "100" : "999"}
-                                  disabled={submitting || !supportsRange}
-                                  className={`py-2 text-sm ${
-                                    !supportsRange ? "opacity-30" : ""
-                                  }`}
-                                />
-                              </td>
+                              {isEnum ? (
+                                <td colSpan={2} className="px-4 py-2.5">
+                                  <div className="flex flex-wrap gap-1.5 rounded-md border border-zinc-200 px-2 py-1">
+                                    {field.enumValues.map((tag) => (
+                                      <span
+                                        key={tag}
+                                        className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700"
+                                      >
+                                        {tag}
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            removeEnumTag(field.id, tag)
+                                          }
+                                          disabled={submitting}
+                                          className="ml-0.5 text-zinc-400 hover:text-red-500"
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </button>
+                                      </span>
+                                    ))}
+                                    <input
+                                      type="text"
+                                      placeholder="Add value..."
+                                      onKeyDown={(e) => {
+                                        if (
+                                          e.key === "Enter" ||
+                                          e.key === ","
+                                        ) {
+                                          e.preventDefault();
+                                          addEnumTag(field.id, e.target.value);
+                                          e.target.value = "";
+                                        }
+                                      }}
+                                      onBlur={(e) => {
+                                        if (e.target.value.trim()) {
+                                          addEnumTag(field.id, e.target.value);
+                                          e.target.value = "";
+                                        }
+                                      }}
+                                      disabled={submitting}
+                                      className="min-w-[80px] flex-1 border-0 bg-transparent py-0.5 text-xs outline-none placeholder:text-zinc-300"
+                                    />
+                                  </div>
+                                </td>
+                              ) : (
+                                <>
+                                  <td className="px-4 py-2.5">
+                                    <FormInput
+                                      type="number"
+                                      step={isNumeric ? "0.01" : "1"}
+                                      value={field.min}
+                                      onChange={(event) =>
+                                        updateField(field.id, {
+                                          min: event.target.value,
+                                        })
+                                      }
+                                      placeholder={
+                                        field.type === "string" ? "1" : "0"
+                                      }
+                                      disabled={submitting || !supportsRange}
+                                      className={`py-2 text-sm ${
+                                        !supportsRange ? "opacity-30" : ""
+                                      }`}
+                                    />
+                                  </td>
+                                  <td className="px-4 py-2.5">
+                                    <FormInput
+                                      type="number"
+                                      step={isNumeric ? "0.01" : "1"}
+                                      value={field.max}
+                                      onChange={(event) =>
+                                        updateField(field.id, {
+                                          max: event.target.value,
+                                        })
+                                      }
+                                      placeholder={
+                                        field.type === "string" ? "100" : "999"
+                                      }
+                                      disabled={submitting || !supportsRange}
+                                      className={`py-2 text-sm ${
+                                        !supportsRange ? "opacity-30" : ""
+                                      }`}
+                                    />
+                                  </td>
+                                </>
+                              )}
                               <td className="px-4 py-2.5 text-right">
                                 <button
                                   type="button"
@@ -483,6 +577,11 @@ export default function ModuleGeneratorPage() {
                         field.type === "decimal";
                       const isNumeric =
                         field.type === "int" || field.type === "decimal";
+                      const isEnum = field.type === "enum";
+                      const noSize =
+                        field.type === "bool" ||
+                        field.type === "DateTime" ||
+                        field.type === "enum";
 
                       return (
                         <div
@@ -525,9 +624,12 @@ export default function ModuleGeneratorPage() {
                                   onChange={(event) => {
                                     const newType = event.target.value;
                                     const patch = { type: newType };
-                                    if (newType === "bool" || newType === "DateTime") {
+                                    if (newType === "bool" || newType === "DateTime" || newType === "enum") {
                                       patch.min = "";
                                       patch.max = "";
+                                    }
+                                    if (newType !== "enum") {
+                                      patch.enumValues = [];
                                     }
                                     updateField(field.id, patch);
                                   }}
@@ -548,9 +650,9 @@ export default function ModuleGeneratorPage() {
                                   onChange={(event) =>
                                     updateField(field.id, { length: event.target.value })
                                   }
-                                  placeholder="255"
-                                  disabled={submitting}
-                                  className="py-1.5 text-xs"
+                                  placeholder={noSize ? "Disable" : "255"}
+                                  disabled={submitting || noSize}
+                                  className={`py-1.5 text-xs ${noSize ? "opacity-30" : ""}`}
                                 />
                               </div>
                             </div>
@@ -604,36 +706,79 @@ export default function ModuleGeneratorPage() {
                               </label>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            {isEnum ? (
                               <div className="space-y-1">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Min</label>
-                                <FormInput
-                                  type="number"
-                                  step={isNumeric ? "0.01" : "1"}
-                                  value={field.min}
-                                  onChange={(event) =>
-                                    updateField(field.id, { min: event.target.value })
-                                  }
-                                  placeholder={field.type === "string" ? "1" : "0"}
-                                  disabled={submitting || !supportsRange}
-                                  className={`py-1.5 text-xs ${!supportsRange ? "opacity-30" : ""}`}
-                                />
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Enum Values</label>
+                                <div className="flex flex-wrap gap-1.5 rounded-lg border border-zinc-200 px-2.5 py-1.5">
+                                  {field.enumValues.map((tag) => (
+                                    <span
+                                      key={tag}
+                                      className="inline-flex items-center gap-1 rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700"
+                                    >
+                                      {tag}
+                                      <button
+                                        type="button"
+                                        onClick={() => removeEnumTag(field.id, tag)}
+                                        disabled={submitting}
+                                        className="text-zinc-400 hover:text-red-500"
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </button>
+                                    </span>
+                                  ))}
+                                  <input
+                                    type="text"
+                                    placeholder="Add value..."
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter" || e.key === ",") {
+                                        e.preventDefault();
+                                        addEnumTag(field.id, e.target.value);
+                                        e.target.value = "";
+                                      }
+                                    }}
+                                    onBlur={(e) => {
+                                      if (e.target.value.trim()) {
+                                        addEnumTag(field.id, e.target.value);
+                                        e.target.value = "";
+                                      }
+                                    }}
+                                    disabled={submitting}
+                                    className="min-w-[60px] flex-1 border-0 bg-transparent py-0.5 text-xs outline-none placeholder:text-zinc-300"
+                                  />
+                                </div>
                               </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Max</label>
-                                <FormInput
-                                  type="number"
-                                  step={isNumeric ? "0.01" : "1"}
-                                  value={field.max}
-                                  onChange={(event) =>
-                                    updateField(field.id, { max: event.target.value })
-                                  }
-                                  placeholder={field.type === "string" ? "100" : "999"}
-                                  disabled={submitting || !supportsRange}
-                                  className={`py-1.5 text-xs ${!supportsRange ? "opacity-30" : ""}`}
-                                />
+                            ) : (
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Min</label>
+                                  <FormInput
+                                    type="number"
+                                    step={isNumeric ? "0.01" : "1"}
+                                    value={field.min}
+                                    onChange={(event) =>
+                                      updateField(field.id, { min: event.target.value })
+                                    }
+                                    placeholder={field.type === "string" ? "1" : "0"}
+                                    disabled={submitting || !supportsRange}
+                                    className={`py-1.5 text-xs ${!supportsRange ? "opacity-30" : ""}`}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Max</label>
+                                  <FormInput
+                                    type="number"
+                                    step={isNumeric ? "0.01" : "1"}
+                                    value={field.max}
+                                    onChange={(event) =>
+                                      updateField(field.id, { max: event.target.value })
+                                    }
+                                    placeholder={field.type === "string" ? "100" : "999"}
+                                    disabled={submitting || !supportsRange}
+                                    className={`py-1.5 text-xs ${!supportsRange ? "opacity-30" : ""}`}
+                                  />
+                                </div>
                               </div>
-                            </div>
+                            )}
                           </div>
                         </div>
                       );
