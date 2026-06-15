@@ -139,5 +139,9 @@ export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
 export const selectRoles = (state) => state.auth.roles;
 export const selectIsAdmin = (state) =>
   state.auth.roles.some((r) => r.toLowerCase() === "admin");
+export const selectHasAdminAccess = (state) =>
+  state.auth.roles.some((r) =>
+    ["admin", "editor"].includes(r.toLowerCase()),
+  );
 
 export default authSlice.reducer;

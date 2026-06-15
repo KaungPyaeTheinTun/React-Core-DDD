@@ -6,7 +6,7 @@ import DeleteModal from "../../components/ui/DeleteModal.jsx";
 import CreateForm from "../../components/categories/CreateForm.jsx";
 import EditForm from "../../components/categories/EditForm.jsx";
 import { useCategories } from "../../hooks/useCategories.js";
-import { Image, PackagePlus, Trash2, Edit3, X } from "lucide-react";
+import { PackagePlus, Trash2, Edit3, X } from "lucide-react";
 
 const pageVariants = {
   initial: { opacity: 0 },
@@ -42,34 +42,6 @@ export default function CategoriesPage() {
   } = useCategories();
 
   const columns = ["Image", "Product Name", "Price", "Description"];
-
-  const renderCell = useCallback((value, index) => {
-    if (index === 0) {
-      const urls = value || [];
-      return urls.length > 0 ? (
-        <div className="flex -space-x-1.5">
-          {urls.slice(0, 3).map((url, i) => (
-            <img
-              key={i}
-              src={url}
-              alt=""
-              className="h-8 w-8 rounded-lg border-2 border-white object-cover"
-            />
-          ))}
-          {urls.length > 3 && (
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-white bg-zinc-100 text-[10px] font-bold text-zinc-500">
-              +{urls.length - 3}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-300">
-          <Image className="h-4 w-4" />
-        </div>
-      );
-    }
-    return value;
-  }, []);
 
   const renderTableActions = useCallback(
     (row) => (
@@ -161,7 +133,6 @@ export default function CategoriesPage() {
               columns={columns}
               rows={formattedRows}
               renderActions={renderTableActions}
-              renderCell={renderCell}
             />
           )}
         </SectionCard>

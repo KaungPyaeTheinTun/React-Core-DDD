@@ -1,4 +1,12 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
+import ImageViewerModal from "./ImageViewerModal";
+
+const IMAGE_EXT = /\.(jpe?g|png|gif|webp|bmp|svg|ico)(\?.*)?$/i;
+
+function isImageUrl(val) {
+  return typeof val === "string" && IMAGE_EXT.test(val);
+}
 
 const rowVariants = {
   hidden: { opacity: 0, x: -4 },
@@ -11,6 +19,48 @@ const rowVariants = {
 
 export default function DataTable({ columns, rows, renderActions, renderCell }) {
   const hasActions = !!renderActions;
+  const [imageViewer, setImageViewer] = useState({ open: false, images: [], index: 0 });
+
+  const openViewer = (images, index) => {
+    const list = Array.isArray(images) ? images : [images];
+    setImageViewer({ open: true, images: list.filter(Boolean), index });
+  };
+
+  function renderValue(v, colIndex, row) {
+    if (renderCell) return renderCell(v, colIndex, row);
+
+    if (isImageUrl(v)) {
+      return (
+        <img
+          src={v}
+          alt=""
+          className="h-10 w-10 rounded-lg object-cover cursor-pointer border border-zinc-200 hover:opacity-80 transition-opacity"
+          onClick={() => openViewer(v, 0)}
+        />
+      );
+    }
+
+    if (Array.isArray(v)) {
+      const imgs = v.filter(isImageUrl);
+      if (imgs.length > 0) {
+        return (
+          <div className="flex items-center gap-1.5">
+            <img
+              src={imgs[0]}
+              alt=""
+              className="h-10 w-10 rounded-lg object-cover cursor-pointer border border-zinc-200 hover:opacity-80 transition-opacity"
+              onClick={() => openViewer(imgs, 0)}
+            />
+            {imgs.length > 1 && (
+              <span className="text-[10px] font-bold text-zinc-400">+{imgs.length - 1}</span>
+            )}
+          </div>
+        );
+      }
+    }
+
+    return v;
+  }
 
   return (
     <div className="w-full">
@@ -38,7 +88,7 @@ export default function DataTable({ columns, rows, renderActions, renderCell }) 
                       {colName}:
                     </span>
                     <span className="text-zinc-900 text-right break-words font-medium">
-                      {renderCell ? renderCell(cellValues[index], index, row) : cellValues[index]}
+                      {renderValue(cellValues[index], index, row)}
                     </span>
                   </div>
                 ))}
@@ -93,7 +143,7 @@ export default function DataTable({ columns, rows, renderActions, renderCell }) 
                       key={i}
                       className="px-4 py-3 text-zinc-800 max-w-xs truncate font-medium"
                     >
-                      {renderCell ? renderCell(v, i - 1, row) : v}
+                      {renderValue(v, i - 1, row)}
                     </td>
                   ),
                 )}
@@ -107,6 +157,14 @@ export default function DataTable({ columns, rows, renderActions, renderCell }) 
           </tbody>
         </table>
       </div>
+
+      {imageViewer.open && (
+        <ImageViewerModal
+          images={imageViewer.images}
+          initialIndex={imageViewer.index}
+          onClose={() => setImageViewer({ open: false, images: [], index: 0 })}
+        />
+      )}
     </div>
   );
 }

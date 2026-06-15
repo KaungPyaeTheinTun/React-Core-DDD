@@ -202,10 +202,9 @@ export function useCrud({
   }, [targetItem, editingId, apiService, fetchItems, resetForm, entityName]);
 
   useEffect(() => {
-    if (!mediaEnabled || items.length === 0) {
-      setRowImages({});
-      return;
-    }
+    if (!mediaEnabled) return;
+
+    if (items.length === 0) return;
 
     let cancelled = false;
 

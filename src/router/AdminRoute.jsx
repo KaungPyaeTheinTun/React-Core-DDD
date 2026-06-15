@@ -1,16 +1,16 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { selectIsAuthenticated, selectIsAdmin } from "../store/slices/authSlice";
+import { selectIsAuthenticated, selectHasAdminAccess } from "../store/slices/authSlice";
 
 export default function AdminRoute() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
-  const isAdminUser = useSelector(selectIsAdmin);
+  const hasAdminAccess = useSelector(selectHasAdminAccess);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (!isAdminUser) {
+  if (!hasAdminAccess) {
     return <Navigate to="/unauthorized" replace />;
   }
 

@@ -2,15 +2,20 @@ import { useState, useRef, useEffect } from "react";
 import {
   LogOut,
   ChevronDown,
-  Menu,
-  X,
   PanelLeftOpen,
   PanelLeftClose,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSelector } from "react-redux";
+import { selectRoles } from "../../store/slices/authSlice";
 
-export default function Header({ currentUser, onLogout, sidebarCollapsed, onToggleSidebar, onMobileOpen }) {
+export default function Header({ currentUser, onLogout, sidebarCollapsed, onToggleSidebar }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const roles = useSelector(selectRoles);
+
+  const panelLabel = roles.some((r) => r.toLowerCase() === "editor")
+    ? "Editor Panel"
+    : "Admin Panel";
 
   const dropdownRef = useRef(null);
 
@@ -43,15 +48,6 @@ export default function Header({ currentUser, onLogout, sidebarCollapsed, onTogg
   return (
     <header className="h-16 w-full border-b border-zinc-200 bg-white px-4 md:px-6 flex items-center justify-between sticky top-0 z-50 text-black">
       <div className="flex items-center gap-3">
-        {/* Mobile hamburger */}
-        <button
-          onClick={onMobileOpen}
-          className="md:hidden rounded-xl p-2 text-zinc-500 hover:bg-zinc-100 hover:text-black transition"
-          aria-label="Open navigation menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-
         {/* Desktop collapse toggle */}
         <button
           onClick={onToggleSidebar}
@@ -66,7 +62,7 @@ export default function Header({ currentUser, onLogout, sidebarCollapsed, onTogg
         </button>
 
         <span className="text-xs font-bold uppercase tracking-wider text-black">
-          Admin Panel
+          {panelLabel}
         </span>
       </div>
 

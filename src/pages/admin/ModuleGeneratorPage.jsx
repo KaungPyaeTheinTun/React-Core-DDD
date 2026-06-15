@@ -220,7 +220,7 @@ export default function ModuleGeneratorPage() {
     >
       <motion.div variants={cardVariants}>
         <SectionCard
-          title="Module Designer"
+          title="Module Generator."
           action={
             <div className="flex items-center gap-2 rounded-xl border border-zinc-200 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-zinc-500">
               <FileCode2 className="h-3.5 w-3.5" />

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { KeyRound } from "lucide-react";
 import SectionCard from "../../components/ui/SectionCard.jsx";
@@ -64,9 +64,14 @@ const cardVariants = {
 export default function UsersPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { loading, error, showForm, formData, setFormData, submitLoading, formattedRows, handleSubmit, resetForm } =
+  const { loading, error, showForm, formData, setFormData, submitLoading, formattedRows, items, handleSubmit, resetForm } =
     useUsers();
   const [roleNamesByUserId, setRoleNamesByUserId] = useState({});
+  const rolesFetched = useRef(false);
+
+  useEffect(() => {
+    rolesFetched.current = false;
+  }, [items]);
 
   const columns = ["Name", "Email", "Roles", "Status"];
 
@@ -83,7 +88,8 @@ export default function UsersPage() {
   }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
-    if (loading || formattedRows.length === 0) return;
+    if (loading || formattedRows.length === 0 || rolesFetched.current) return;
+    rolesFetched.current = true;
 
     let cancelled = false;
 

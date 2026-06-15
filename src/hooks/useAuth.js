@@ -42,7 +42,7 @@ export function useAuth() {
             `Welcome back, ${user.fullName}!`,
           );
 
-          if (roles.some((r) => r.toLowerCase() === "admin")) {
+          if (roles.some((r) => ["admin", "editor"].includes(r.toLowerCase()))) {
             navigate("/admin/users");
           } else {
             navigate("/user/dashboard");

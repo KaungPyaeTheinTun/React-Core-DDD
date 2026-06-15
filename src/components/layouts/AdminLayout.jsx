@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useNavigate } from "react-router-dom";
 import Header from "./Header.jsx";
 import Sidebar from "./Sidebar.jsx";
+import MobileBottomNav from "./MobileBottomNav.jsx";
 import { logout, selectUser } from "../../store/slices/authSlice";
 
 const SIDEBAR_STORAGE_KEY = "admin_sidebar_collapsed";
@@ -16,8 +17,6 @@ export default function AdminLayout() {
     const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
     return stored ? JSON.parse(stored) : false;
   });
-
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(sidebarCollapsed));
@@ -39,21 +38,17 @@ export default function AdminLayout() {
         onLogout={handleLogout}
         sidebarCollapsed={sidebarCollapsed}
         onToggleSidebar={() => setSidebarCollapsed((prev) => !prev)}
-        onMobileOpen={() => setMobileSidebarOpen(true)}
       />
 
       <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed((prev) => !prev)}
-          mobileOpen={mobileSidebarOpen}
-          onMobileClose={() => setMobileSidebarOpen(false)}
-        />
+        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed((prev) => !prev)} />
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden animate-in fade-in duration-300">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden animate-in fade-in duration-300 pb-16 md:pb-0">
           <Outlet />
         </main>
       </div>
+
+      <MobileBottomNav />
     </div>
   );
 }

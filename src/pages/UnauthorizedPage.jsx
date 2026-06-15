@@ -1,14 +1,14 @@
 import { ShieldAlert } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { selectIsAdmin } from "../store/slices/authSlice";
+import { selectHasAdminAccess } from "../store/slices/authSlice";
 
 export default function UnauthorizedPage() {
   const navigate = useNavigate();
-  const isAdminUser = useSelector(selectIsAdmin);
+  const hasAdminAccess = useSelector(selectHasAdminAccess);
 
   const handleBack = () => {
-    if (isAdminUser) {
+    if (hasAdminAccess) {
       navigate("/admin/users", { replace: true });
     } else {
       navigate("/user/dashboard", { replace: true });
