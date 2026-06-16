@@ -10,6 +10,7 @@ import {
   WandSparkles,
   GripVertical,
   X,
+  ListTree,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
@@ -46,6 +47,7 @@ const createField = () => ({
   min: "",
   max: "",
   enumValues: [],
+  useCommonTable: false,
 });
 
 const toggleClass =
@@ -132,6 +134,7 @@ export default function ModuleGeneratorPage() {
               : Number(field.length),
           isRequired: field.isRequired,
           isNullable: field.isNullable,
+          useCommonTable: field.useCommonTable,
         };
 
         if (field.type === "string") {
@@ -324,6 +327,7 @@ export default function ModuleGeneratorPage() {
                           <th className="px-4 py-3 w-[110px]">Size</th>
                           <th className="px-4 py-3 text-center w-[60px]">Req</th>
                           <th className="px-4 py-3 text-center w-[60px]">Null</th>
+                          <th className="px-4 py-3 text-center w-[60px]">CT</th>
                           <th className="px-4 py-3 w-[125px]">Min</th>
                           <th className="px-4 py-3 w-[125px]">Max</th>
                           <th className="px-4 py-3 text-right w-12"></th>
@@ -373,6 +377,7 @@ export default function ModuleGeneratorPage() {
                                     }
                                     if (newType !== "enum") {
                                       patch.enumValues = [];
+                                      patch.useCommonTable = false;
                                     }
                                     updateField(field.id, patch);
                                   }}
@@ -456,6 +461,36 @@ export default function ModuleGeneratorPage() {
                                     <div
                                       className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
                                         field.isNullable
+                                          ? "translate-x-4"
+                                          : "translate-x-0"
+                                      }`}
+                                    />
+                                  </div>
+                              </label>
+                            </td>
+                              <td className="px-4 py-2.5 text-center">
+                                <label className="inline-flex cursor-pointer items-center">
+                                  <div
+                                    className={`relative h-5 w-9 rounded-full transition-colors ${
+                                      field.useCommonTable
+                                        ? "bg-black"
+                                        : "bg-zinc-200"
+                                    } ${!isEnum ? "opacity-30" : ""}`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={field.useCommonTable}
+                                      onChange={(event) =>
+                                        updateField(field.id, {
+                                          useCommonTable: event.target.checked,
+                                        })
+                                      }
+                                      disabled={submitting || !isEnum}
+                                      className="peer sr-only"
+                                    />
+                                    <div
+                                      className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                                        field.useCommonTable
                                           ? "translate-x-4"
                                           : "translate-x-0"
                                       }`}
@@ -630,6 +665,7 @@ export default function ModuleGeneratorPage() {
                                     }
                                     if (newType !== "enum") {
                                       patch.enumValues = [];
+                                      patch.useCommonTable = false;
                                     }
                                     updateField(field.id, patch);
                                   }}
@@ -703,6 +739,29 @@ export default function ModuleGeneratorPage() {
                                   />
                                 </div>
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Nullable</span>
+                              </label>
+                              <label className="flex items-center gap-2.5 cursor-pointer">
+                                <div
+                                  className={`relative h-5 w-9 rounded-full transition-colors ${
+                                    field.useCommonTable ? "bg-black" : "bg-zinc-200"
+                                  } ${!isEnum ? "opacity-30" : ""}`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={field.useCommonTable}
+                                    onChange={(event) =>
+                                      updateField(field.id, { useCommonTable: event.target.checked })
+                                    }
+                                    disabled={submitting || !isEnum}
+                                    className="peer sr-only"
+                                  />
+                                  <div
+                                    className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                                      field.useCommonTable ? "translate-x-4" : "translate-x-0"
+                                    }`}
+                                  />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">CT</span>
                               </label>
                             </div>
 

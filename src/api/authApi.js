@@ -8,4 +8,10 @@ export const authApi = {
   register: async (payload) => {
     return await api.post("/auth/register", payload);
   },
+
+  logout: async (refreshToken) => {
+    return await api.post("/auth/logout", refreshToken, {
+      headers: { "Content-Type": "application/json" },
+    });
+  },
 };

@@ -1,5 +1,8 @@
-import { ImagePlus, Trash2, UploadCloud, X } from "lucide-react";
+import { AlertCircle, ImagePlus, Trash2, UploadCloud, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 function normalizeValue(value) {
   if (!value) return [];
@@ -26,6 +29,7 @@ export default function ImageUpload({
   const inputRef = useRef(null);
   const selectedImages = useMemo(() => normalizeValue(value), [value]);
   const [previews, setPreviews] = useState([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const objectUrls = [];
@@ -56,6 +60,19 @@ export default function ImageUpload({
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files || []);
     if (files.length === 0) return;
+
+    let hasError = false;
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        setError(`"${file.name}" exceeds the 5 MB limit.`);
+        hasError = true;
+      } else if (!ALLOWED_TYPES.includes(file.type)) {
+        setError(`"${file.name}" is not supported. Only JPG, PNG, and WEBP are allowed.`);
+        hasError = true;
+      }
+    }
+    if (!hasError) setError("");
+
     const nextImages = [...selectedImages, ...files];
     const limitedImages = maxFiles ? nextImages.slice(0, maxFiles) : nextImages;
     emitChange(limitedImages);
@@ -129,6 +146,13 @@ export default function ImageUpload({
               : "No image selected"}
         </span>
       </button>
+
+      {error ? (
+        <div className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      ) : null}
 
       {previews.length > 0 ? (
         <div className="flex flex-wrap gap-3">

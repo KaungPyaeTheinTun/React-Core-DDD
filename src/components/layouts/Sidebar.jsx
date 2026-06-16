@@ -10,14 +10,18 @@ import {
   ChevronLeft,
   ChevronRight,
   Fingerprint,
+  Database,
+  MessageSquare,
 } from "lucide-react";
 
 const navItems = [
   { to: "/admin/users", icon: Users, label: "Users" },
   { to: "/admin/humans", icon: Fingerprint, label: "Humans" },
   { to: "/admin/categories", icon: Package, label: "Categories" },
+  { to: "/admin/common-tables", icon: Database, label: "Common Table" },
   { to: "/admin/roles", icon: Shield, label: "Roles" },
   { to: "/admin/permissions", icon: KeyRound, label: "Permissions" },
+  { to: "/admin/messenger", icon: MessageSquare, label: "Messenger" },
   { to: "/admin/module-generator", icon: FileCode2, label: "Generator" },
 ];
 

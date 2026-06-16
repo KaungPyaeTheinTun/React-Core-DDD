@@ -5,5 +5,5 @@ import { selectIsAuthenticated } from "../store/slices/authSlice";
 export default function ProtectedRoute() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <Outlet /> : <Navigate to="/unauthorized" replace />;
 }

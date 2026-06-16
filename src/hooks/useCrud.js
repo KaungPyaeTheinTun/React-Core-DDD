@@ -1,10 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { showNewCommentToast } from "../utils/toast.jsx";
-import { setItems, setLoading, setError, selectEntityState } from "../store/slices/crudSlice";
+import { setItems, setLoading, setError, setPageInfo, selectEntityState } from "../store/slices/crudSlice";
 import { api } from "../services/api";
 
 const API_BASE = api.defaults.baseURL.replace(/\/api\/?$/, "");
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 function resolveImageUrl(url) {
   if (!url) return null;
@@ -22,7 +25,9 @@ export function useCrud({
 }) {
   const dispatch = useDispatch();
   const entityState = useSelector(selectEntityState(entityName));
-  const { items, loading, error } = entityState;
+  const { items, loading, error, page: storePage, totalCount } = entityState;
+  const pageSize = 10;
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -34,22 +39,30 @@ export function useCrud({
   const [imageFiles, setImageFiles] = useState([]);
   const [existingMedia, setExistingMedia] = useState([]);
   const [rowImages, setRowImages] = useState({});
+  const [page, setPage] = useState(1);
 
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async (targetPage) => {
+    const p = targetPage ?? page;
     try {
       dispatch(setLoading({ entity: entityName, loading: true }));
       dispatch(setError({ entity: entityName, error: null }));
 
-      const response = await apiService.list();
+      const response = await apiService.list(p, pageSize);
+      const data = response?.data;
 
-      dispatch(setItems({ entity: entityName, items: response?.data?.items || [] }));
+      dispatch(setItems({ entity: entityName, items: data?.items || [] }));
+      dispatch(setPageInfo({ entity: entityName, page: p, pageSize, totalCount: data?.totalCount || 0 }));
     } catch (err) {
       console.error(err);
       dispatch(setError({ entity: entityName, error: err.message }));
     } finally {
       dispatch(setLoading({ entity: entityName, loading: false }));
     }
-  }, [dispatch, apiService, entityName]);
+  }, [dispatch, apiService, entityName, page, pageSize]);
+
+  const handlePageChange = useCallback((newPage) => {
+    setPage(newPage);
+  }, []);
 
   useEffect(() => {
     fetchItems();
@@ -76,6 +89,20 @@ export function useCrud({
         const images = mediaEnabled
           ? Array.isArray(imageFiles) ? imageFiles : imageFiles ? [imageFiles] : []
           : [];
+
+        const fileList = images.filter((f) => f instanceof File);
+        for (const file of fileList) {
+          if (file.size > MAX_FILE_SIZE) {
+            showNewCommentToast("System", ` File size exceeds the 5 MB limit`);
+            setSubmitLoading(false);
+            return;
+          }
+          if (!ALLOWED_TYPES.includes(file.type)) {
+            showNewCommentToast("System", `"${file.name}" is not supported. Only JPG, PNG, and WEBP are allowed.`);
+            setSubmitLoading(false);
+            return;
+          }
+        }
 
         if (editingId) {
           await apiService.update(editingId, payload);
@@ -261,6 +288,10 @@ export function useCrud({
     handleEditClick,
     openDeleteConfirmation,
     handleConfirmDelete,
+    page: storePage,
+    totalCount,
+    totalPages,
+    handlePageChange,
     ...mediaOutput,
   };
 }

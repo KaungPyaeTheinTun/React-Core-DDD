@@ -9,11 +9,15 @@ import {
   Package,
   Fingerprint,
   Grid3X3,
+  Database,
+  MessageSquare,
 } from "lucide-react";
 
 const moreSubItems = [
   { to: "/admin/categories", icon: Package, label: "Categories" },
   { to: "/admin/humans", icon: Fingerprint, label: "Humans" },
+  { to: "/admin/common-tables", icon: Database, label: "Common Table" },
+  { to: "/admin/messenger", icon: MessageSquare, label: "Messenger" },
 ];
 
 export default function MobileBottomNav() {

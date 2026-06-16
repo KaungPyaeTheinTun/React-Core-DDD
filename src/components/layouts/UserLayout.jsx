@@ -1,13 +1,18 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, selectUser } from "../../store/slices/authSlice";
+import { authApi } from "../../api/authApi";
 
 export default function UserLayout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentUser = useSelector(selectUser);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem("refresh_token");
+    try {
+      await authApi.logout(refreshToken);
+    } catch {}
     dispatch(logout());
     navigate("/login", { replace: true });
   };

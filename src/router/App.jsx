@@ -22,6 +22,8 @@ const RolesPermissionsPage = lazy(() => import("../pages/admin/RolesPermissionsP
 const PermissionsPage = lazy(() => import("../pages/admin/PermissionsPage.jsx"));
 const ModuleGeneratorPage = lazy(() => import("../pages/admin/ModuleGeneratorPage.jsx"));
 const HumansPage = lazy(() => import("../pages/admin/HumansPage.jsx"));
+const CommonTablesPage = lazy(() => import("../pages/admin/CommonTablesPage.jsx"));
+const MessengerPage = lazy(() => import("../pages/admin/MessengerPage.jsx"));
 
 const DashboardPage = lazy(() => import("../pages/user/DashboardPage.jsx"));
 const ProfilePage = lazy(() => import("../pages/user/ProfilePage.jsx"));
@@ -49,6 +51,8 @@ export default function App() {
               <Route path="/admin/permissions" element={<PermissionsPage />} />
               <Route path="/admin/module-generator" element={<ModuleGeneratorPage />} />
               <Route path="/admin/humans" element={<HumansPage />} />
+              <Route path="/admin/common-tables" element={<CommonTablesPage />} />
+              <Route path="/admin/messenger" element={<MessengerPage />} />
             </Route>
           </Route>
         </Route>

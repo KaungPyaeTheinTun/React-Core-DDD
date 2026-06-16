@@ -5,6 +5,7 @@ import Header from "./Header.jsx";
 import Sidebar from "./Sidebar.jsx";
 import MobileBottomNav from "./MobileBottomNav.jsx";
 import { logout, selectUser } from "../../store/slices/authSlice";
+import { authApi } from "../../api/authApi";
 
 const SIDEBAR_STORAGE_KEY = "admin_sidebar_collapsed";
 
@@ -22,7 +23,11 @@ export default function AdminLayout() {
     localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(sidebarCollapsed));
   }, [sidebarCollapsed]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem("refresh_token");
+    try {
+      await authApi.logout(refreshToken);
+    } catch {}
     dispatch(logout());
     navigate("/login", { replace: true });
   };
