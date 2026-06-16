@@ -105,7 +105,7 @@ export function useCrud({
         }
 
         if (editingId) {
-          await apiService.update(editingId, payload);
+          const response = await apiService.update(editingId, payload);
 
           if (mediaEnabled) {
             const newFiles = images.filter((f) => f instanceof File);
@@ -122,7 +122,8 @@ export function useCrud({
             }
           }
 
-          showNewCommentToast("System", `${entityName} updated successfully.`);
+          const msg = response?.message || response?.Message;
+          showNewCommentToast("System", msg || `${entityName} updated successfully`);
         } else {
           const response = await apiService.create(payload);
 
@@ -136,7 +137,8 @@ export function useCrud({
             }
           }
 
-          showNewCommentToast("System", `${entityName} created successfully.`);
+          const msg = response?.message || response?.Message;
+          showNewCommentToast("System", msg || `${entityName} created successfully`);
         }
 
         await fetchItems();
@@ -206,9 +208,10 @@ export function useCrud({
     if (!targetItem) return;
 
     try {
-      await apiService.remove(targetItem.id);
+      const response = await apiService.remove(targetItem.id);
 
-      showNewCommentToast("System", `${entityName} deleted successfully.`);
+      const msg = response?.message || response?.Message;
+      showNewCommentToast("System", msg || `${entityName} deleted successfully`);
 
       if (editingId === targetItem.id) {
         resetForm();

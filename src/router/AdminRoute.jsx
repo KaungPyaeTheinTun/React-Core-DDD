@@ -7,7 +7,7 @@ export default function AdminRoute() {
   const hasAdminAccess = useSelector(selectHasAdminAccess);
 
   if (!isAuthenticated) {
-    return <Navigate to="/unauthorized" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (!hasAdminAccess) {
