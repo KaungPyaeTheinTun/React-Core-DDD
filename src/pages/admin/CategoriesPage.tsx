@@ -37,11 +37,9 @@ export default function CategoriesPage() {
     openDeleteConfirmation,
     handleConfirmDelete,
     resetForm,
-    imageFiles,
-    setImageFiles,
   } = useCategories();
 
-  const columns = ["Image", "Product Name", "Price", "Description"];
+  const columns = ["Category Name"];
 
   const renderTableActions = useCallback(
     (row: any) => (
@@ -95,8 +93,6 @@ export default function CategoriesPage() {
             handleFormSubmit={handleFormSubmit}
             submitLoading={submitLoading}
             resetForm={resetForm}
-            imageFiles={imageFiles as (string | File)[]}
-            setImageFiles={setImageFiles as (files: (string | File)[]) => void}
           />
         )}
 
@@ -108,8 +104,6 @@ export default function CategoriesPage() {
             handleFormSubmit={handleFormSubmit}
             submitLoading={submitLoading}
             resetForm={resetForm}
-            imageFiles={imageFiles as (string | File)[]}
-            setImageFiles={setImageFiles as (files: (string | File)[]) => void}
           />
         )}
       </AnimatePresence>
@@ -145,7 +139,7 @@ export default function CategoriesPage() {
             onClose={() => setDeleteModalOpen(false)}
             onConfirm={handleConfirmDelete}
             itemName={(targetCategory as { name?: string })?.name || ""}
-            title="Remove Product From Inventory"
+            title="Remove Category."
           />
         )}
       </AnimatePresence>

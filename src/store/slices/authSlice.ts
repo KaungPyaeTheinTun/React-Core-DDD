@@ -116,7 +116,7 @@ const authSlice = createSlice({
       state.roles = [];
       state.isAuthenticated = false;
       state.error = null;
-      localStorage.removeItem("token");
+      localStorage.removeItem("token"); // need to change cookie
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
       localStorage.removeItem("roles");

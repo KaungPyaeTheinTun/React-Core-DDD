@@ -3,7 +3,6 @@ import type { Variants } from "framer-motion";
 import { motion } from "framer-motion";
 import SectionCard from "../ui/SectionCard";
 import FormInput from "../ui/FormInput";
-import ImageUpload from "../ui/ImageUpload";
 
 interface EditFormProps {
   cardVariants: Variants;
@@ -12,8 +11,6 @@ interface EditFormProps {
   handleFormSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   submitLoading: boolean;
   resetForm: () => void;
-  imageFiles: (File | string)[];
-  setImageFiles: (files: (File | string)[]) => void;
 }
 
 const EditForm = forwardRef<HTMLDivElement, EditFormProps>(({
@@ -23,8 +20,6 @@ const EditForm = forwardRef<HTMLDivElement, EditFormProps>(({
   handleFormSubmit,
   submitLoading,
   resetForm,
-  imageFiles,
-  setImageFiles,
 }, ref) => {
   return (
     <motion.div
@@ -40,7 +35,7 @@ const EditForm = forwardRef<HTMLDivElement, EditFormProps>(({
           onSubmit={handleFormSubmit}
           className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
         >
-          <div className="space-y-1 md:col-span-2">
+          <div className="space-y-1 md:col-span-4">
             <label className="text-xs text-zinc-500 font-bold uppercase tracking-wider">
               Category Title
             </label>
@@ -52,44 +47,6 @@ const EditForm = forwardRef<HTMLDivElement, EditFormProps>(({
               }
               required
             />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs text-zinc-500 font-bold uppercase tracking-wider">
-              Unit Price ($)
-            </label>
-            <FormInput
-              type="number"
-              step="0.01"
-                placeholder="9.99"
-              value={(categoryForm.price as string) ?? ""}
-              onChange={(e) =>
-                setCategoryForm({ ...categoryForm, price: e.target.value })
-              }
-              required
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs text-zinc-500 font-bold uppercase tracking-wider">
-              Description
-            </label>
-            <FormInput
-              placeholder="Premium gaming peripherals"
-              value={(categoryForm.description as string) ?? ""}
-              onChange={(e) =>
-                setCategoryForm({ ...categoryForm, description: e.target.value })
-              }
-              required
-            />
-          </div>
-            <div className="md:col-span-4">
-              <ImageUpload
-                value={imageFiles}
-                onChange={setImageFiles}
-                label="Product Image"
-                name="image"
-                maxFiles={1}
-                accept="image/*"
-              />
           </div>
           <div className="md:col-span-4 flex justify-end gap-2">
             <button

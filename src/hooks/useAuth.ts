@@ -56,7 +56,7 @@ export function useAuth() {
           );
 
           if (roles.some((r: string) => ["admin", "editor"].includes(r.toLowerCase()))) {
-            navigate("/admin/users");
+            navigate("/admin/categories");
           } else {
             navigate("/user/dashboard");
           }

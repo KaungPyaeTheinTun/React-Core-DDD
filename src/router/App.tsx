@@ -26,6 +26,7 @@ const ModuleGeneratorPage = lazy(() => import("../pages/admin/ModuleGeneratorPag
 const HumansPage = lazy(() => import("../pages/admin/HumansPage"));
 const CommonTablesPage = lazy(() => import("../pages/admin/CommonTablesPage"));
 const MessengerPage = lazy(() => import("../pages/admin/MessengerPage"));
+const ProductsPage = lazy(() => import("../pages/admin/ProductsPage"));
 
 const DashboardPage = lazy(() => import("../pages/user/DashboardPage"));
 const ProfilePage = lazy(() => import("../pages/user/ProfilePage"));
@@ -62,6 +63,7 @@ export default function App() {
               <Route path="/admin/humans" element={<HumansPage />} />
               <Route path="/admin/common-tables" element={<CommonTablesPage />} />
               <Route path="/admin/messenger" element={<MessengerPage />} />
+              <Route path="/admin/products" element={<ProductsPage />} />
             </Route>
           </Route>
         </Route>

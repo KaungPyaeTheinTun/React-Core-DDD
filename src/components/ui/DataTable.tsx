@@ -41,7 +41,10 @@ export default function DataTable({ columns, rows, renderActions, renderCell }: 
   };
 
   function renderValue(v: unknown, colIndex: number, row: any): ReactNode {
-    if (renderCell) return renderCell(v, colIndex, row);
+    if (renderCell) {
+      const custom = renderCell(v, colIndex, row);
+      if (custom !== undefined) return custom;
+    }
 
     if (isImageUrl(v)) {
       return (

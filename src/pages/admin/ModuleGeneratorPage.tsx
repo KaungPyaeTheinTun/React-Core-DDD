@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Check,
   DatabaseZap,
@@ -12,7 +12,7 @@ import {
   X,
   ListTree,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
 import { moduleGeneratorApi } from "../../api/moduleGeneratorApi";
@@ -72,7 +72,17 @@ export default function ModuleGeneratorPage() {
   const [runDbUpdate, setRunDbUpdate] = useState(false);
   const [hasImage, setHasImage] = useState(false);
   const [fields, setFields] = useState<Field[]>([createField()]);
+  const [enableRelation, setEnableRelation] = useState(false);
+  const [relatedEntityName, setRelatedEntityName] = useState("");
+  const [isPivot, setIsPivot] = useState(false);
+  const [deleteBehavior, setDeleteBehavior] = useState("Restrict");
   const [submitting, setSubmitting] = useState(false);
+  const [tables, setTables] = useState<string[]>([]);
+  const [tablesError, setTablesError] = useState(false);
+
+  useEffect(() => {
+    moduleGeneratorApi.getTables().then(setTables).catch(() => setTablesError(true));
+  }, []);
 
   const fieldCount = useMemo(
     () => fields.filter((field) => field.name.trim()).length,
@@ -126,7 +136,12 @@ export default function ModuleGeneratorPage() {
     setRunMigration(true);
     setRunDbUpdate(false);
     setHasImage(false);
+    setEnableRelation(false);
+    setRelatedEntityName("");
+    setIsPivot(false);
+    setDeleteBehavior("Restrict");
     setFields([createField()]);
+    setTablesError(false);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -148,6 +163,7 @@ export default function ModuleGeneratorPage() {
           isRequired: field.isRequired,
           isNullable: field.isNullable,
           useCommonTable: field.useCommonTable,
+          isRelation: false,
         };
 
         if (field.type === "string") {
@@ -197,6 +213,21 @@ export default function ModuleGeneratorPage() {
     if (cleanFields.length === 0) {
       toast.error("Add at least one field.");
       return;
+    }
+
+    if (enableRelation && relatedEntityName) {
+      cleanFields.push({
+        name: relatedEntityName,
+        type: "relation",
+        length: null,
+        isRequired: false,
+        isNullable: deleteBehavior === "SetNull",
+        useCommonTable: false,
+        isRelation: true,
+        relatedEntityName,
+        isPivot,
+        deleteBehavior,
+      } as any);
     }
 
     try {
@@ -272,7 +303,7 @@ export default function ModuleGeneratorPage() {
                     className="hidden"
                   />
                   <DatabaseZap className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                  Migration
+                  RunMigration
                 </label>
                 <label className={toggleClass}>
                   <input
@@ -283,7 +314,7 @@ export default function ModuleGeneratorPage() {
                     className="hidden"
                   />
                   <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                  DB Update
+                  DataBase Update
                 </label>
                 <label className={toggleClass}>
                   <input
@@ -294,7 +325,7 @@ export default function ModuleGeneratorPage() {
                     className="hidden"
                   />
                   <Image className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                  Image
+                  Image Upload
                 </label>
               </div>
             </div>
@@ -302,19 +333,110 @@ export default function ModuleGeneratorPage() {
             {/* Fields Designer */}
             <div className="overflow-hidden rounded-xl border border-zinc-200">
               <div className="flex items-center justify-between gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-black">
-                  Fields Designer
-                </h3>
+                <div className="flex items-center gap-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-black">
+                    Fields Designer
+                  </h3>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <div
+                      className={`relative h-5 w-9 rounded-full transition-colors ${
+                        enableRelation ? "bg-black" : "bg-zinc-200"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={enableRelation}
+                        onChange={(e) => setEnableRelation(e.target.checked)}
+                        disabled={submitting}
+                        className="peer sr-only"
+                      />
+                      <div
+                        className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                          enableRelation ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Relation</span>
+                  </label>
+                </div>
                 <button
                   type="button"
                   onClick={addField}
                   disabled={submitting}
-                  className="flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
+                  className="flex items-center gap-1.5 rounded-lg bg-black px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-300"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Add Field
+                  <span className="hidden sm:inline">Add Field</span>
                 </button>
               </div>
+
+              <AnimatePresence initial={false}>
+                {enableRelation && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                    className="border-b border-zinc-200 overflow-hidden"
+                  >
+                    <div className="px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-4">
+                        <select
+                          value={relatedEntityName}
+                          onChange={(e) => setRelatedEntityName(e.target.value)}
+                          disabled={submitting}
+                          className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-black outline-none transition focus:border-black disabled:bg-zinc-50"
+                        >
+                          <option value="">Select table...</option>
+                          {tables.map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                        {tablesError && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                            Data unavailable
+                          </span>
+                        )}
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <div className={`relative h-5 w-9 rounded-full transition-colors ${isPivot ? "bg-black" : "bg-zinc-200"}`}>
+                            <input
+                              type="checkbox"
+                              checked={isPivot}
+                              onChange={(e) => setIsPivot(e.target.checked)}
+                              disabled={submitting}
+                              className="peer sr-only"
+                            />
+                            <div className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${isPivot ? "translate-x-4" : "translate-x-0"}`} />
+                          </div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Pivot</span>
+                        </label>
+                        <div className="flex items-center gap-1">
+                          {["Cascade", "Restrict", "SetNull"].map((b) => (
+                            <label
+                              key={b}
+                              className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition ${
+                                deleteBehavior === b
+                                  ? "border-black bg-black text-white"
+                                  : "border-zinc-200 text-zinc-500 hover:border-zinc-300"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="delete-behavior"
+                                checked={deleteBehavior === b}
+                                onChange={() => setDeleteBehavior(b)}
+                                disabled={submitting}
+                                className="sr-only"
+                              />
+                              {b === "SetNull" ? "Set Null" : b}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {fields.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
@@ -360,9 +482,9 @@ export default function ModuleGeneratorPage() {
                             field.type === "DateTime" ||
                             field.type === "enum";
 
-                          return (
+                          return [
                             <tr
-                              key={field.id}
+                              key={`${field.id}-main`}
                               className="border-t border-zinc-100 transition hover:bg-zinc-50/60"
                             >
                               <td className="px-4 py-2.5">
@@ -610,7 +732,7 @@ export default function ModuleGeneratorPage() {
                                 </button>
                               </td>
                             </tr>
-                          );
+                          ];
                         })}
                       </tbody>
                     </table>
@@ -706,7 +828,7 @@ export default function ModuleGeneratorPage() {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-6">
+                            <div className="flex flex-wrap items-center gap-3">
                               <label className="flex items-center gap-2.5 cursor-pointer">
                                 <div
                                   className={`relative h-5 w-9 rounded-full transition-colors ${

@@ -11,6 +11,7 @@ import {
   Grid3X3,
   Database,
   MessageSquare,
+  ShoppingCart,
   type LucideProps,
 } from "lucide-react";
 
@@ -22,6 +23,7 @@ interface MoreSubItem {
 
 const moreSubItems: MoreSubItem[] = [
   { to: "/admin/categories", icon: Package, label: "Categories" },
+  { to: "/admin/products", icon: ShoppingCart, label: "Products" },
   { to: "/admin/humans", icon: Fingerprint, label: "Humans" },
   { to: "/admin/common-tables", icon: Database, label: "Common Table" },
   { to: "/admin/messenger", icon: MessageSquare, label: "Messenger" },
